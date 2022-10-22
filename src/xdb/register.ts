@@ -1,7 +1,5 @@
-import { MayFn } from '@edsolater/fnkit'
-import { TODO, XDBDatabase } from './type'
+import { XDBDatabase } from './type'
 import { getXDBFromOriginalIDB } from './wrapToXDB'
-
 
 /**
  * event:blocked or event:error will be a rejected promise
@@ -10,19 +8,22 @@ import { getXDBFromOriginalIDB } from './wrapToXDB'
 export function getDB(params: {
   name: string
   version?: number
-  structure: MayFn<TODO, [{ ev: IDBVersionChangeEvent }]>
-}): Promise<{ xdb: XDBDatabase; originalRequest: IDBRequest }> {
+  onUpgradeneeded(util: { ev: IDBVersionChangeEvent; xdb: XDBDatabase; idb: IDBDatabase }): void
+  // TODO: props:objectShape instead of props:onUpgradeneeded 
+}): Promise<XDBDatabase> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', (ev) => {
       const originalIDB = originalRequest.result
       const xdb = getXDBFromOriginalIDB(originalIDB)
-      resolve({ xdb, originalRequest })
+      resolve(xdb)
     })
     originalRequest.addEventListener('error', (ev) => reject(ev))
     originalRequest.addEventListener('blocked', (ev) => reject(ev))
     originalRequest.addEventListener('upgradeneeded', (ev) => {
-      throw 'not imply upgradeneeded 📝' // do with props: structure
+      const { result: idb } = ev.target as unknown as { result: IDBDatabase }
+      const xdb = getXDBFromOriginalIDB(idb)
+      params.onUpgradeneeded({ ev, xdb, idb })
     })
   })
 }

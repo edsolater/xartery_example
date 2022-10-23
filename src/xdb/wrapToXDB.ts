@@ -58,8 +58,9 @@ export function getXDBObjectStoreFromIDBObjectStore<T>({
     })
   }
 
-  const set: XDBObjectStore<T>['set'] = (key, value) => {
-    throw 'not imply yet'
+  const put: XDBObjectStore<T>['put'] = async (value, recordKey) => {
+    const v = await extractRequestValue(originalObjectStore.put(value, recordKey))
+    return Boolean(v)
   }
 
   const deleteFn: XDBObjectStore<T>['delete'] = () => {
@@ -82,7 +83,7 @@ export function getXDBObjectStoreFromIDBObjectStore<T>({
 
     getAll,
     get,
-    set,
+    put,
     delete: deleteFn,
     clear
   }

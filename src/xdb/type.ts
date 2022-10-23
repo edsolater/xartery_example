@@ -8,9 +8,9 @@ export type GetTransactionParams = {
 
 export type GetObjectStoreParams = { name: string }
 
-export type XDBDatabase<T = any> = {
+export type XDBDatabase<S = Record<string, any>> = {
   _original: IDBDatabase
-  getTransaction(opt: GetTransactionParams): XDBTransaction<T>
+  getTransaction(opt: GetTransactionParams): XDBTransaction<S[keyof S]>
 }
 
 export type XDBTransaction<T> = {
@@ -34,7 +34,8 @@ export type XDBObjectStore<T> = {
   // mutate data
   getAll(opts: { query: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
   get(key: keyof T): Promise<T>
-  set(key: keyof T, value: T): Promise<boolean>
+  put(value: T, recordKey?: IDBValidKey): Promise<boolean>
+
   delete(key: keyof T): Promise<boolean>
   clear(): Promise<boolean>
   /** @todo more operate methods */

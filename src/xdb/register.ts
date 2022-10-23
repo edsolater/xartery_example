@@ -12,7 +12,7 @@ type GetDBParams = {
  * event:blocked or event:error will be a rejected promise
  * event:success will be a resolved promise
  */
-export function getXDB(params: GetDBParams): Promise<XDBDatabase> {
+export function getXDB<S>(params: GetDBParams): Promise<XDBDatabase<S>> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', (ev) => {
@@ -30,12 +30,12 @@ export function getXDB(params: GetDBParams): Promise<XDBDatabase> {
   })
 }
 
-export async function getXDBObjectStore(params: {
+export async function getXDBObjectStore<T>(params: {
   dbOptions: GetDBParams
   transactionOptions?: Optional<GetTransactionParams, 'name'>
   objectStoreOptions: GetObjectStoreParams
-}): Promise<XDBObjectStore> {
-  const xdb = await getXDB(params.dbOptions)
+}): Promise<XDBObjectStore<T>> {
+  const xdb = await getXDB<Record<string, T>>(params.dbOptions)
   const transaction = xdb.getTransaction({ ...params.transactionOptions, name: params.objectStoreOptions.name })
   const objectStore = transaction.getObjectStore(params.dbOptions)
   return objectStore

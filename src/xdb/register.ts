@@ -1,16 +1,18 @@
-import { XDBDatabase } from './type'
-import { getXDBFromOriginalIDB } from './wrapToXDB'
+import { GetObjectStoreParams, GetTransactionParams, XDBDatabase, XDBObjectStore } from './type'
+import { getXDBFromOriginalIDB } from './idbToXDB'
+import { Optional } from '../typeTools'
+
+type GetDBParams = {
+  name: string
+  version?: number
+  onUpgradeneeded(util: { ev: IDBVersionChangeEvent; xdb: XDBDatabase; idb: IDBDatabase }): void
+}
 
 /**
  * event:blocked or event:error will be a rejected promise
  * event:success will be a resolved promise
  */
-export function getDB(params: {
-  name: string
-  version?: number
-  onUpgradeneeded(util: { ev: IDBVersionChangeEvent; xdb: XDBDatabase; idb: IDBDatabase }): void
-  // TODO: props:objectShape instead of props:onUpgradeneeded 
-}): Promise<XDBDatabase> {
+export function getDB(params: GetDBParams): Promise<XDBDatabase> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', (ev) => {
@@ -26,4 +28,15 @@ export function getDB(params: {
       params.onUpgradeneeded({ ev, xdb, idb })
     })
   })
+}
+
+export async function getDBObjectStore(params: {
+  dbOptions: GetDBParams
+  transactionOptions?: Optional<GetTransactionParams, 'name'>
+  objectStoreOptions: GetObjectStoreParams
+}): Promise<XDBObjectStore> {
+  const xdb = await getDB(params.dbOptions)
+  const transaction = xdb.getTransaction({ ...params.transactionOptions, name: params.objectStoreOptions.name })
+  const objectStore = transaction.getObjectStore(params.dbOptions)
+  return objectStore
 }

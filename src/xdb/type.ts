@@ -1,16 +1,14 @@
-export type TODO = unknown
-
-type GetTransactionParams = {
+export type GetTransactionParams = {
   name: string
   mode?: IDBTransactionMode
   options?: IDBTransactionOptions
 }
 
+export type GetObjectStoreParams = { name: string }
+
 export type XDBDatabase = {
   originalIDB: IDBDatabase
   getTransaction(opt: GetTransactionParams): XDBTransaction
-  /** only a shortcut */
-  getObjectStore(opt: GetTransactionParams): XDBObjectStore
 }
 
 export type XDBTransaction = {

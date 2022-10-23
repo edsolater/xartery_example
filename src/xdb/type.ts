@@ -1,3 +1,5 @@
+import { TODO } from '../typeTools'
+
 export type GetTransactionParams = {
   name: string
   mode?: IDBTransactionMode
@@ -18,4 +20,10 @@ export type XDBTransaction = {
 
 export type XDBObjectStore = {
   originalObjectStore: IDBObjectStore
+  get(opts: { query: TODO }): Promise<TODO[]>
+  get(key: string /** the value of keyPath */): Promise<TODO>
+  set(key: string /** the value of keyPath */, value: TODO): Promise<boolean>
+  delete(key: string /** the value of keyPath */):Promise<boolean>
+  clear():Promise<boolean>
+  /** @todo more operate methods */
 } & IDBObjectStore

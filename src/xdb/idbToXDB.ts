@@ -30,5 +30,17 @@ export function getXdbObjectStoreFromOriginalObjectStore({
 }: {
   originalObjectStore: IDBObjectStore
 }): XDBObjectStore {
-  return Object.assign(originalObjectStore, { originalObjectStore })
+  const get: XDBObjectStore['get'] = () => {
+    throw 'not'
+  }
+  const set: XDBObjectStore['set'] = () => {
+    throw 'not imply yet'
+  }
+  const deleteFn: XDBObjectStore['delete'] = () => {
+    throw 'not imply yet'
+  }
+  const clear: XDBObjectStore['clear'] = () => {
+    throw 'not imply yet'
+  }
+  return Object.assign(originalObjectStore, { originalObjectStore, get, set, delete: deleteFn, clear })
 }

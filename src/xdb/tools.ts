@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs'
+
 export function extractRequestValue<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.addEventListener('success', () => {
@@ -5,6 +7,17 @@ export function extractRequestValue<T>(request: IDBRequest<T>): Promise<T> {
     })
     request.addEventListener('error', () => {
       reject(request.error)
+    })
+  })
+}
+
+export function extractRequest$<T>(request: IDBRequest<T>): Observable<T> {
+  return new Observable((subscriber) => {
+    request.addEventListener('success', () => {
+      subscriber.next(request.result)
+    })
+    request.addEventListener('error', () => {
+      subscriber.error(request.error)
     })
   })
 }

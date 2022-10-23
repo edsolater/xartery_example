@@ -8,17 +8,17 @@ export type GetTransactionParams = {
 
 export type GetObjectStoreParams = { name: string }
 
-export type XDBDatabase = {
+export type XDBDatabase<T = any> = {
   _original: IDBDatabase
-  getTransaction(opt: GetTransactionParams): XDBTransaction
+  getTransaction(opt: GetTransactionParams): XDBTransaction<T>
 }
 
-export type XDBTransaction = {
+export type XDBTransaction<T> = {
   _original: IDBTransaction
-  getObjectStore(opt?: GetTransactionParams): XDBObjectStore
+  getObjectStore(opt?: GetTransactionParams): XDBObjectStore<T>
 }
 
-export type XDBObjectStore= {
+export type XDBObjectStore<T> = {
   _original: IDBObjectStore
   indexNames: IDBObjectStore['indexNames']
   keyPath: IDBObjectStore['keyPath']
@@ -27,21 +27,21 @@ export type XDBObjectStore= {
 
   // NOTE: temporary do not care about objectStore's index
   /** hanle index */
-  index(name: string): XDBIndex
+  index(name: string): XDBIndex<T>
   /** only in version change */
-  createIndex(name: string, opts?: IDBIndexParameters): XDBIndex
+  createIndex(name: string, opts?: IDBIndexParameters): XDBIndex<T>
 
   // mutate data
-  getAll(opts: { query: TODO; direction?: IDBCursorDirection }): Promise<TODO[]>
-  get(key: string /** the value of keyPath */): Promise<TODO>
-  set(key: string /** the value of keyPath */, value: TODO): Promise<boolean>
-  delete(key: string /** the value of keyPath */): Promise<boolean>
+  getAll(opts: { query: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
+  get(key: keyof T): Promise<T>
+  set(key: keyof T, value: T): Promise<boolean>
+  delete(key: keyof T): Promise<boolean>
   clear(): Promise<boolean>
   /** @todo more operate methods */
 }
 
-export type XDBIndex = {
+export type XDBIndex<T> = {
   _original: IDBIndex
-  get(opts: { query: TODO }): Promise<TODO[]>
-  get(key: string /** the value of keyPath */): Promise<TODO>
+  get(opts: { query: TODO }): Promise<T[]>
+  get(key: string /** the value of keyPath */): Promise<T>
 }

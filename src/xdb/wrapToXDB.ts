@@ -1,9 +1,9 @@
 import { extractRequest$, extractRequestValue } from './tools'
-import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex } from './type'
+import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex, XDBTemplate } from './type'
 
-export function getXDBFromOriginalIDB<T = any>(idb: IDBDatabase): XDBDatabase<T> {
+export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
   const getTransaction: XDBDatabase['getTransaction'] = ({ name, mode = 'readwrite' }) =>
-    getXDBTransactionFromIDBTransaction<T>({
+    getXDBTransactionFromIDBTransaction<S>({
       originalTransaction: idb.transaction(name, mode),
       transactionName: name
     })
@@ -13,13 +13,13 @@ export function getXDBFromOriginalIDB<T = any>(idb: IDBDatabase): XDBDatabase<T>
   }
 }
 
-export function getXDBTransactionFromIDBTransaction<T>({
+export function getXDBTransactionFromIDBTransaction<S extends XDBTemplate>({
   originalTransaction,
   transactionName
 }: {
   originalTransaction: IDBTransaction
   transactionName: string
-}): XDBTransaction<T> {
+}): XDBTransaction<S> {
   return {
     _original: originalTransaction,
     getObjectStore: (params) =>
@@ -29,16 +29,16 @@ export function getXDBTransactionFromIDBTransaction<T>({
   }
 }
 
-export function getXDBObjectStoreFromIDBObjectStore<T>({
+export function getXDBObjectStoreFromIDBObjectStore<S extends XDBTemplate = XDBTemplate>({
   originalObjectStore
 }: {
   originalObjectStore: IDBObjectStore
-}): XDBObjectStore<T> {
-  const index: XDBObjectStore<T>['index'] = (name) => getXDBIndexFromIDBIndex(originalObjectStore.index(name))
+}): XDBObjectStore<S> {
+  const index: XDBObjectStore<S>['index'] = (name) => getXDBIndexFromIDBIndex(originalObjectStore.index(name))
 
-  const get: XDBObjectStore<T>['get'] = (key) => extractRequestValue(originalObjectStore.get(String(key)))
+  const get: XDBObjectStore<S>['get'] = (key) => extractRequestValue(originalObjectStore.get(String(key)))
 
-  const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction } = {}) => {
+  const getAll: XDBObjectStore<S>['getAll'] = async ({ query, direction } = {}) => {
     return new Promise((resolve, reject) => {
       const values = [] as any[]
       const cursor$ = extractRequest$(originalObjectStore.openCursor(query, direction))
@@ -58,16 +58,16 @@ export function getXDBObjectStoreFromIDBObjectStore<T>({
     })
   }
 
-  const put: XDBObjectStore<T>['put'] = async (value, recordKey) => {
+  const put: XDBObjectStore<S>['put'] = async (value, recordKey) => {
     const v = await extractRequestValue(originalObjectStore.put(value, recordKey))
     return Boolean(v)
   }
 
-  const deleteFn: XDBObjectStore<T>['delete'] = () => {
+  const deleteFn: XDBObjectStore<S>['delete'] = () => {
     throw 'not imply yet'
   }
 
-  const clear: XDBObjectStore<T>['clear'] = () => {
+  const clear: XDBObjectStore<S>['clear'] = () => {
     throw 'not imply yet'
   }
 
@@ -79,7 +79,7 @@ export function getXDBObjectStoreFromIDBObjectStore<T>({
     transaction: originalObjectStore.transaction,
 
     index,
-    createIndex: (name, opts) => getXDBIndexFromIDBIndex<T>(originalObjectStore.createIndex(name, name, opts)),
+    createIndex: (name, opts) => getXDBIndexFromIDBIndex<S>(originalObjectStore.createIndex(name, name, opts)),
 
     getAll,
     get,

@@ -1,4 +1,4 @@
-import { GetObjectStoreParams, GetTransactionParams, XDBDatabase, XDBObjectStore } from './type'
+import { GetObjectStoreParams, GetTransactionParams, XDBDatabase, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
 import { getXDBFromOriginalIDB } from './wrapToXDB'
 import { Optional } from '../typeTools'
 
@@ -12,7 +12,7 @@ type GetDBParams = {
  * event:blocked or event:error will be a rejected promise
  * event:success will be a resolved promise
  */
-export function getXDB<S = any>(params: GetDBParams): Promise<XDBDatabase<S>> {
+export function getXDB<S extends XDBTemplate = XDBTemplate>(params: GetDBParams): Promise<XDBDatabase<S>> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', (ev) => {
@@ -30,12 +30,12 @@ export function getXDB<S = any>(params: GetDBParams): Promise<XDBDatabase<S>> {
   })
 }
 
-export async function getXDBObjectStore<T>(params: {
+export async function getXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>(params: {
   dbOptions: GetDBParams
   transactionOptions?: Optional<GetTransactionParams, 'name'>
   objectStoreOptions: GetObjectStoreParams
 }): Promise<XDBObjectStore<T>> {
-  const xdb = await getXDB<Record<string, T>>(params.dbOptions)
+  const xdb = await getXDB<Record<string, T[]>>(params.dbOptions)
   const transaction = xdb.getTransaction({ ...params.transactionOptions, name: params.objectStoreOptions.name })
   const objectStore = transaction.getObjectStore(params.dbOptions)
   return objectStore

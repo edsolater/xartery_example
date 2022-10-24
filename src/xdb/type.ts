@@ -1,3 +1,4 @@
+import { Valueof } from '@edsolater/fnkit'
 import { TODO } from '../typeTools'
 
 export type GetTransactionParams = {
@@ -7,17 +8,17 @@ export type GetTransactionParams = {
 
 export type GetObjectStoreParams = { name: string }
 
-export type XDBDatabase<S = Record<string, any>> = {
+export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
   _original: IDBDatabase
-  getTransaction(opt: GetTransactionParams): XDBTransaction<S[keyof S]>
+  getTransaction(opt: GetTransactionParams): XDBTransaction<S>
 }
 
-export type XDBTransaction<T> = {
+export type XDBTransaction<S extends XDBTemplate> = {
   _original: IDBTransaction
-  getObjectStore(opt?: GetTransactionParams): XDBObjectStore<T>
+  getObjectStore(opt?: GetTransactionParams): XDBObjectStore<Valueof<S>[number]>
 }
 
-export type XDBObjectStore<T> = {
+export type XDBObjectStore<T extends XDBRecordTemplate> = {
   _original: IDBObjectStore
   indexNames: IDBObjectStore['indexNames']
   keyPath: IDBObjectStore['keyPath']
@@ -29,10 +30,9 @@ export type XDBObjectStore<T> = {
   index(name: string): XDBIndex<T>
   /** only in version change */
   createIndex(name: string, opts?: IDBIndexParameters): XDBIndex<T>
-
   // mutate data
-  getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T>
-  get(key: keyof T): Promise<TODO>
+  getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
+  get(key: keyof T): Promise<T>
   put(value: T, recordKey?: IDBValidKey): Promise<boolean>
 
   delete(key: keyof T): Promise<boolean>
@@ -45,3 +45,6 @@ export type XDBIndex<T> = {
   get(opts: { query: TODO }): Promise<T[]>
   get(key: string /** the value of keyPath */): Promise<T>
 }
+
+export type XDBRecordTemplate = Record<string, any>
+export type XDBTemplate = Record<string, XDBRecordTemplate[]>

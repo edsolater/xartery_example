@@ -2,9 +2,9 @@ import { extractRequest$, extractRequestValue } from './tools'
 import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex } from './type'
 
 export function getXDBFromOriginalIDB<T = any>(idb: IDBDatabase): XDBDatabase<T> {
-  const getTransaction: XDBDatabase['getTransaction'] = ({ name, mode = 'readwrite', options }) =>
+  const getTransaction: XDBDatabase['getTransaction'] = ({ name, mode = 'readwrite' }) =>
     getXDBTransactionFromIDBTransaction<T>({
-      originalTransaction: idb.transaction(name, mode, options),
+      originalTransaction: idb.transaction(name, mode),
       transactionName: name
     })
   return {

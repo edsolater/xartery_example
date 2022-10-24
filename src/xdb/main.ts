@@ -15,7 +15,7 @@ type GetDBParams = {
 export function getXDB<S extends XDBTemplate = XDBTemplate>(params: GetDBParams): Promise<XDBDatabase<S>> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
-    originalRequest.addEventListener('success', (ev) => {
+    originalRequest.addEventListener('success', () => {
       const originalIDB = originalRequest.result
       const xdb = getXDBFromOriginalIDB(originalIDB)
       resolve(xdb)

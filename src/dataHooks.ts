@@ -22,19 +22,17 @@ const xdb = getXDB<{ album: { title: string; year: number }[] }>({
   }
 })
 
-
-
 export const useList = () => {
   const [list, setList] = useState<{ title: string; year: number }[]>([])
   useEffect(() => {
     xdb.then((xdb) => {
-      const objectStore = xdb.getTransaction({ name: 'album' }).getObjectStore()
+      const objectStore = xdb.getObjectStore({ name: 'album' })
       initData.forEach((record) => {
         objectStore.put(record)
       })
     })
     xdb
-      .then((xdb) => xdb.getTransaction({ name: 'album' }).getObjectStore())
+      .then((xdb) => xdb.getObjectStore({ name: 'album' }))
       .then((data) => data.getAll())
       .then((list) => {
         setList(list)

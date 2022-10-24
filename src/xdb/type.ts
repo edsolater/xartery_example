@@ -11,6 +11,7 @@ export type GetObjectStoreParams = { name: string }
 export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
   _original: IDBDatabase
   getTransaction(opt: GetTransactionParams): XDBTransaction<S>
+  getObjectStore(opt: GetTransactionParams): XDBObjectStore<Valueof<S>[number]>
 }
 
 export type XDBTransaction<S extends XDBTemplate> = {
@@ -33,7 +34,7 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   // mutate data
   getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
   get(key: keyof T): Promise<T>
-  put(value: T, recordKey?: IDBValidKey): Promise<boolean>
+  put(value: T): Promise<boolean>
 
   delete(key: keyof T): Promise<boolean>
   clear(): Promise<boolean>

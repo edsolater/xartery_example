@@ -1,15 +1,17 @@
 import { useRecordedEffect } from '@edsolater/hookit'
-import { useEffect } from 'react'
-import { useList } from './dataHandler'
+import { useList } from './dataHooks'
 
 function App() {
   const list = useList()
-  useConsoleLog({list})
+  useConsoleLog({ list })
   return <div className='App'>hello xartery</div>
 }
 
 export default App
 
+/**
+ * @todo  move to hookit
+ */
 function useConsoleLog(config: Record<string, any>) {
   const values = Object.values(config)
   const keys = Object.keys(config)
@@ -18,7 +20,7 @@ function useConsoleLog(config: Record<string, any>) {
       const key = keys[idx]
       const prevValue = prevValues[idx]
       if (prevValue !== value) {
-        console.log(`${key}: `, { value, prevValue })
+        console.log(`${key}: `,  value )
       }
     })
   }, values)

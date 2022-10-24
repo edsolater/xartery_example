@@ -1,4 +1,4 @@
-import { extractRequest$, extractRequestValue } from './tools'
+import { extractRequest$, respondRequestValue } from './tools'
 import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex, XDBTemplate } from './type'
 
 export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
@@ -7,9 +7,14 @@ export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): 
       originalTransaction: idb.transaction(name, mode),
       transactionName: name
     })
+
+  const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, mode }) =>
+    getTransaction({ name, mode }).getObjectStore()
+
   return {
     _original: idb,
-    getTransaction
+    getTransaction,
+    getObjectStore
   }
 }
 
@@ -36,7 +41,7 @@ export function getXDBObjectStoreFromIDBObjectStore<S extends XDBTemplate = XDBT
 }): XDBObjectStore<S> {
   const index: XDBObjectStore<S>['index'] = (name) => getXDBIndexFromIDBIndex(originalObjectStore.index(name))
 
-  const get: XDBObjectStore<S>['get'] = (key) => extractRequestValue(originalObjectStore.get(String(key)))
+  const get: XDBObjectStore<S>['get'] = (key) => respondRequestValue(originalObjectStore.get(String(key)))
 
   const getAll: XDBObjectStore<S>['getAll'] = async ({ query, direction } = {}) => {
     return new Promise((resolve, reject) => {
@@ -58,8 +63,8 @@ export function getXDBObjectStoreFromIDBObjectStore<S extends XDBTemplate = XDBT
     })
   }
 
-  const put: XDBObjectStore<S>['put'] = async (value, recordKey) => {
-    const v = await extractRequestValue(originalObjectStore.put(value, recordKey))
+  const put: XDBObjectStore<S>['put'] = async (value) => {
+    const v = await respondRequestValue(originalObjectStore.put(value))
     return Boolean(v)
   }
 

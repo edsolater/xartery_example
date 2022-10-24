@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getXDB } from './xdb/main'
 
 const initData = [
@@ -22,13 +22,23 @@ const xdb = getXDB<{ album: { title: string; year: number }[] }>({
   }
 })
 
+
+
 export const useList = () => {
   const [list, setList] = useState<{ title: string; year: number }[]>([])
-  xdb
-    .then((xdb) => xdb.getTransaction({ name: 'album' }).getObjectStore())
-    .then((data) => data.getAll())
-    .then((list) => {
-      setList(list)
+  useEffect(() => {
+    xdb.then((xdb) => {
+      const objectStore = xdb.getTransaction({ name: 'album' }).getObjectStore()
+      initData.forEach((record) => {
+        objectStore.put(record)
+      })
     })
+    xdb
+      .then((xdb) => xdb.getTransaction({ name: 'album' }).getObjectStore())
+      .then((data) => data.getAll())
+      .then((list) => {
+        setList(list)
+      })
+  }, [])
   return list
 }

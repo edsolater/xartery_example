@@ -12,7 +12,7 @@ type GetDBParams = {
  * event:blocked or event:error will be a rejected promise
  * event:success will be a resolved promise
  */
-export function getXDB<S>(params: GetDBParams): Promise<XDBDatabase<S>> {
+export function getXDB<S = any>(params: GetDBParams): Promise<XDBDatabase<S>> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', (ev) => {

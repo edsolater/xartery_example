@@ -38,7 +38,7 @@ export function getXDBObjectStoreFromIDBObjectStore<T>({
 
   const get: XDBObjectStore<T>['get'] = (key) => extractRequestValue(originalObjectStore.get(String(key)))
 
-  const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction }) => {
+  const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction } = {}) => {
     return new Promise((resolve, reject) => {
       const values = [] as any[]
       const cursor$ = extractRequest$(originalObjectStore.openCursor(query, direction))

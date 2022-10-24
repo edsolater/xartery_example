@@ -27,9 +27,7 @@ export const useList = () => {
   useEffect(() => {
     xdb.then((xdb) => {
       const objectStore = xdb.getObjectStore({ name: 'album' })
-      initData.forEach((record) => {
-        objectStore.put(record)
-      })
+      objectStore.putList(initData)
     })
     xdb
       .then((xdb) => xdb.getObjectStore({ name: 'album' }))

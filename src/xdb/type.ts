@@ -35,6 +35,7 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
   get(key: keyof T): Promise<T>
   put(value: T): Promise<boolean>
+  putList(values: T[]): Promise<boolean>
 
   delete(key: keyof T): Promise<boolean>
   clear(): Promise<boolean>

@@ -1,5 +1,5 @@
 import { extractRequest$, respondRequestValue } from './tools'
-import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex, XDBTemplate } from './type'
+import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex, XDBTemplate, XDBRecordTemplate } from './type'
 
 export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
   const getTransaction: XDBDatabase['getTransaction'] = ({ name, mode = 'readwrite' }) =>
@@ -34,16 +34,16 @@ export function getXDBTransactionFromIDBTransaction<S extends XDBTemplate>({
   }
 }
 
-export function getXDBObjectStoreFromIDBObjectStore<S extends XDBTemplate = XDBTemplate>({
+export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
   originalObjectStore
 }: {
   originalObjectStore: IDBObjectStore
-}): XDBObjectStore<S> {
-  const index: XDBObjectStore<S>['index'] = (name) => getXDBIndexFromIDBIndex(originalObjectStore.index(name))
+}): XDBObjectStore<T> {
+  const index: XDBObjectStore<T>['index'] = (name) => getXDBIndexFromIDBIndex(originalObjectStore.index(name))
 
-  const get: XDBObjectStore<S>['get'] = (key) => respondRequestValue(originalObjectStore.get(String(key)))
+  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(originalObjectStore.get(String(key)))
 
-  const getAll: XDBObjectStore<S>['getAll'] = async ({ query, direction } = {}) => {
+  const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction } = {}) => {
     return new Promise((resolve, reject) => {
       const values = [] as any[]
       const cursor$ = extractRequest$(originalObjectStore.openCursor(query, direction))
@@ -63,16 +63,21 @@ export function getXDBObjectStoreFromIDBObjectStore<S extends XDBTemplate = XDBT
     })
   }
 
-  const put: XDBObjectStore<S>['put'] = async (value) => {
+  const put: XDBObjectStore<T>['put'] = async (value) => {
     const v = await respondRequestValue(originalObjectStore.put(value))
     return Boolean(v)
   }
+  const putList: XDBObjectStore<T>['putList'] = (values) =>
+    Promise.all(values.map((value) => put(value))).then(
+      () => true,
+      () => false
+    )
 
-  const deleteFn: XDBObjectStore<S>['delete'] = () => {
+  const deleteFn: XDBObjectStore<T>['delete'] = () => {
     throw 'not imply yet'
   }
 
-  const clear: XDBObjectStore<S>['clear'] = () => {
+  const clear: XDBObjectStore<T>['clear'] = () => {
     throw 'not imply yet'
   }
 
@@ -84,11 +89,13 @@ export function getXDBObjectStoreFromIDBObjectStore<S extends XDBTemplate = XDBT
     transaction: originalObjectStore.transaction,
 
     index,
-    createIndex: (name, opts) => getXDBIndexFromIDBIndex<S>(originalObjectStore.createIndex(name, name, opts)),
+    createIndex: (name, opts) => getXDBIndexFromIDBIndex<T>(originalObjectStore.createIndex(name, name, opts)),
 
     getAll,
     get,
     put,
+    putList,
+
     delete: deleteFn,
     clear
   }

@@ -1,5 +1,4 @@
-xdb: a simpler version of idb 
+xdb: a simpler version of idb \
+for easier the flow path, no IDBTransaction
 
 only have 2 model: XDB and XDBObjectStore
-
-for easier the flow path, no IDBTransaction concept

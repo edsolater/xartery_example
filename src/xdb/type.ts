@@ -1,16 +1,14 @@
 import { Valueof } from '@edsolater/fnkit'
 import { TODO } from '../typeTools'
 
-export type GetTransactionParams = {
-  name: string
-  mode?: IDBTransactionMode
+export type GetXDBObjectStoreParams = {
+  name: string,
+  transactionMode?: IDBTransactionMode
 }
-
-export type GetObjectStoreParams = { name: string }
 
 export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
   _original: IDBDatabase
-  getObjectStore(opt: GetTransactionParams): XDBObjectStore<Valueof<S>[number]>
+  getObjectStore(opts: GetXDBObjectStoreParams): XDBObjectStore<Valueof<S>[number]>
 }
 
 export type XDBObjectStore<T extends XDBRecordTemplate> = {

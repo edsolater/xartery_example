@@ -1,5 +1,6 @@
+import { useAsyncEffect } from '@edsolater/hookit'
 import { useEffect, useState } from 'react'
-import { getXDB } from './xdb/main'
+import { getXDB, getXDBObjectStore } from './xdb/main'
 
 const initData = [
   { title: 'Power windows', year: 1985 },
@@ -15,26 +16,28 @@ const initData = [
   { title: 'Rush', year: 1974 }
 ]
 
-const xdb = getXDB<{ album: { title: string; year: number }[] }>({
-  name: 'my-database',
-  onUpgradeneeded: (xdb) => {
-    xdb.idb.createObjectStore('album', { keyPath: 'title' })
-  }
-})
+type AlbumItem = {
+  title: string
+  year: number
+}
 
 export const useList = () => {
-  const [list, setList] = useState<{ title: string; year: number }[]>([])
-  useEffect(() => {
-    xdb.then((xdb) => {
-      const objectStore = xdb.getObjectStore({ name: 'album' })
-      objectStore.putList(initData)
+  const [list, setList] = useState<AlbumItem[]>([])
+  useAsyncEffect(async () => {
+    const objectStore = await getXDBObjectStore<AlbumItem>({
+      dbOptions: {
+        name: 'my-database',
+        onUpgradeneeded: ({ createObjectStore }) => {
+          // 💡 IDEA: can just auto create?
+          createObjectStore({ name: 'album', options: { keyPath: 'title' } })
+        }
+      },
+      objectStoreOptions: {
+        name: 'album'
+      }
     })
-    xdb
-      .then((xdb) => xdb.getObjectStore({ name: 'album' }))
-      .then((data) => data.getAll())
-      .then((list) => {
-        setList(list)
-      })
+    objectStore.putList(initData)
+    setList(await objectStore.getAll())
   }, [])
   return list
 }

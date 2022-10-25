@@ -1,18 +1,21 @@
-import { GetObjectStoreParams, GetTransactionParams, XDBDatabase, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
+import { GetXDBObjectStoreParams, XDBDatabase, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
 import { getXDBFromOriginalIDB } from './wrapToXDB'
-import { Optional } from '../typeTools'
 
-type GetDBParams = {
+type GetXDBParams = {
   name: string
   version?: number
-  onUpgradeneeded(util: { ev: IDBVersionChangeEvent; xdb: XDBDatabase; idb: IDBDatabase }): void
+  onUpgradeneeded(util: {
+    ev: IDBVersionChangeEvent
+    xdb: XDBDatabase
+    createObjectStore: (opts: { name: string; options?: IDBObjectStoreParameters }) => void
+  }): void
 }
 
 /**
  * event:blocked or event:error will be a rejected promise
  * event:success will be a resolved promise
  */
-export function getXDB<S extends XDBTemplate = XDBTemplate>(params: GetDBParams): Promise<XDBDatabase<S>> {
+export function getXDB<S extends XDBTemplate = XDBTemplate>(params: GetXDBParams): Promise<XDBDatabase<S>> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', () => {
@@ -25,18 +28,20 @@ export function getXDB<S extends XDBTemplate = XDBTemplate>(params: GetDBParams)
     originalRequest.addEventListener('upgradeneeded', (ev) => {
       const { result: idb } = ev.target as unknown as { result: IDBDatabase }
       const xdb = getXDBFromOriginalIDB(idb)
-      params.onUpgradeneeded({ ev, xdb, idb })
+      params.onUpgradeneeded({
+        ev,
+        xdb,
+        createObjectStore: ({ name, options }) => idb.createObjectStore(name, options)
+      })
     })
   })
 }
 
 export async function getXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>(params: {
-  dbOptions: GetDBParams
-  transactionOptions?: Optional<GetTransactionParams, 'name'>
-  objectStoreOptions: GetObjectStoreParams
+  dbOptions: GetXDBParams
+  objectStoreOptions: GetXDBObjectStoreParams
 }): Promise<XDBObjectStore<T>> {
   const xdb = await getXDB<Record<string, T[]>>(params.dbOptions)
-  const transaction = xdb.getTransaction({ ...params.transactionOptions, name: params.objectStoreOptions.name })
-  const objectStore = transaction.getObjectStore(params.dbOptions)
+  const objectStore = xdb.getObjectStore(params.objectStoreOptions)
   return objectStore
 }

@@ -21,22 +21,20 @@ type AlbumItem = {
   year: number
 }
 
-export const useList = () => {
+export const useXDB = () => {
   const [list, setList] = useState<AlbumItem[]>([])
   useAsyncEffect(async () => {
     const objectStore = await getXDBObjectStore<AlbumItem>({
       dbOptions: {
-        name: 'my-database',
-        onUpgradeneeded: ({ createObjectStore }) => {
-          // 💡 IDEA: can just auto create?
-          createObjectStore({ name: 'album', options: { keyPath: 'title' } })
-        }
+        name: 'my-database'
       },
-      objectStoreOptions: {
-        name: 'album'
+      objectStoreInitOptions: {
+        name: 'album',
+        keyPath: 'title',
+        indexes: [{ property: 'year' }],
+        initRecords: initData
       }
     })
-    objectStore.putList(initData)
     setList(await objectStore.getAll())
   }, [])
   return list

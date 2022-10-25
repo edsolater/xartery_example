@@ -2,7 +2,7 @@ import { observablize, respondRequestValue } from './tools'
 import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
 
 export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
-  const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode }) =>
+  const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode = 'readwrite' }) =>
     getXDBObjectStoreFromIDBObjectStore({
       idbObjectStore: idb.transaction(name, transactionMode).objectStore(name)
     })

@@ -1,8 +1,8 @@
 import { useRecordedEffect } from '@edsolater/hookit'
-import { useList } from './dataHooks'
+import { useXDB } from './dataHooks'
 
 function App() {
-  const list = useList()
+  const list = useXDB()
   useConsoleLog({ list })
   return <div className='App'>hello xartery</div>
 }

@@ -10,13 +10,7 @@ export type GetObjectStoreParams = { name: string }
 
 export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
   _original: IDBDatabase
-  getTransaction(opt: GetTransactionParams): XDBTransaction<S>
   getObjectStore(opt: GetTransactionParams): XDBObjectStore<Valueof<S>[number]>
-}
-
-export type XDBTransaction<S extends XDBTemplate> = {
-  _original: IDBTransaction
-  getObjectStore(opt?: GetTransactionParams): XDBObjectStore<Valueof<S>[number]>
 }
 
 export type XDBObjectStore<T extends XDBRecordTemplate> = {

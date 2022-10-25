@@ -11,7 +11,7 @@ export function respondRequestValue<T>(request: IDBRequest<T>): Promise<T> {
   })
 }
 
-export function extractRequest$<T>(request: IDBRequest<T>): Observable<T> {
+export function observablize<T>(request: IDBRequest<T>): Observable<T> {
   return new Observable((subscriber) => {
     request.addEventListener('success', () => {
       subscriber.next(request.result)

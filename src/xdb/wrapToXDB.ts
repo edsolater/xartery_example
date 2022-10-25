@@ -1,36 +1,15 @@
-import { extractRequest$, respondRequestValue } from './tools'
-import { XDBDatabase, XDBTransaction, XDBObjectStore, XDBIndex, XDBTemplate, XDBRecordTemplate } from './type'
+import { observablize, respondRequestValue } from './tools'
+import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
 
 export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
-  const getTransaction: XDBDatabase['getTransaction'] = ({ name, mode = 'readwrite' }) =>
-    getXDBTransactionFromIDBTransaction<S>({
-      originalTransaction: idb.transaction(name, mode),
-      transactionName: name
-    })
-
   const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, mode }) =>
-    getTransaction({ name, mode }).getObjectStore()
+    getXDBObjectStoreFromIDBObjectStore({
+      originalObjectStore: idb.transaction(name, mode).objectStore(name)
+    })
 
   return {
     _original: idb,
-    getTransaction,
     getObjectStore
-  }
-}
-
-export function getXDBTransactionFromIDBTransaction<S extends XDBTemplate>({
-  originalTransaction,
-  transactionName
-}: {
-  originalTransaction: IDBTransaction
-  transactionName: string
-}): XDBTransaction<S> {
-  return {
-    _original: originalTransaction,
-    getObjectStore: (params) =>
-      getXDBObjectStoreFromIDBObjectStore({
-        originalObjectStore: originalTransaction.objectStore(params?.name ?? transactionName)
-      })
   }
 }
 
@@ -46,7 +25,7 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
   const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction } = {}) => {
     return new Promise((resolve, reject) => {
       const values = [] as any[]
-      const cursor$ = extractRequest$(originalObjectStore.openCursor(query, direction))
+      const cursor$ = observablize(originalObjectStore.openCursor(query, direction))
       cursor$.subscribe({
         next: (cursor) => {
           if (cursor) {

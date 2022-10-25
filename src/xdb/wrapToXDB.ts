@@ -4,6 +4,7 @@ import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate }
 export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
   const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode = 'readwrite' }) =>
     getXDBObjectStoreFromIDBObjectStore({
+      idb,
       idbObjectStore: idb.transaction(name, transactionMode).objectStore(name)
     })
 
@@ -14,10 +15,14 @@ export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): 
 }
 
 export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
+  idb,
   idbObjectStore
 }: {
+  idb: IDBDatabase
   idbObjectStore: IDBObjectStore
 }): XDBObjectStore<T> {
+  const xdb = getXDBFromOriginalIDB(idb)
+
   const index: XDBObjectStore<T>['index'] = (name) => getXDBIndexFromIDBIndex(idbObjectStore.index(name))
 
   const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore.get(String(key)))
@@ -62,11 +67,13 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
 
   return {
     _original: idbObjectStore,
+    transaction: idbObjectStore.transaction,
+    xdb,
+
     name: idbObjectStore.name,
     indexNames: idbObjectStore.indexNames,
     keyPath: idbObjectStore.keyPath,
     autoIncrement: idbObjectStore.autoIncrement,
-    transaction: idbObjectStore.transaction,
 
     index,
     createIndex: (name, opts) => getXDBIndexFromIDBIndex<T>(idbObjectStore.createIndex(name, name, opts)),

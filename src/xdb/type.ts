@@ -1,4 +1,4 @@
-import { Valueof } from '@edsolater/fnkit'
+import { SKeyof, Valueof } from '@edsolater/fnkit'
 import { TODO } from '../typeTools'
 
 export type XDBObjectStoreOptions = {
@@ -13,11 +13,14 @@ export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
 
 export type XDBObjectStore<T extends XDBRecordTemplate> = {
   _original: IDBObjectStore
+  transaction: IDBObjectStore['transaction']
+  xdb:XDBDatabase 
+
   name: IDBObjectStore['name']
   indexNames: IDBObjectStore['indexNames']
   keyPath: IDBObjectStore['keyPath']
   autoIncrement: IDBObjectStore['autoIncrement']
-  transaction: IDBObjectStore['transaction']
+  
 
   // NOTE: temporary do not care about objectStore's index
   /** hanle index */
@@ -26,11 +29,11 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   createIndex(name: string, opts?: IDBIndexParameters): XDBIndex<T>
   // mutate data
   getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
-  get(key: keyof T): Promise<T>
+  get(key: SKeyof<T>): Promise<T>
   put(value: T): Promise<boolean>
   putList(values: T[]): Promise<boolean>
 
-  delete(key: keyof T): Promise<boolean>
+  delete(key: SKeyof<T>): Promise<boolean>
   clear(): Promise<boolean>
   /** @todo more operate methods */
 }

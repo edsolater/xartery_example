@@ -1,6 +1,6 @@
 import { useAsyncEffect } from '@edsolater/hookit'
-import { useEffect, useState } from 'react'
-import { getXDB, getXDBObjectStore } from './xdb/main'
+import { useState } from 'react'
+import { getXDBObjectStore } from './xdb/main'
 
 const initData = [
   { title: 'Power windows', year: 1985 },

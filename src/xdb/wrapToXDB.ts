@@ -4,7 +4,7 @@ import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate }
 export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
   const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode }) =>
     getXDBObjectStoreFromIDBObjectStore({
-      originalObjectStore: idb.transaction(name, transactionMode).objectStore(name)
+      idbObjectStore: idb.transaction(name, transactionMode).objectStore(name)
     })
 
   return {
@@ -14,18 +14,18 @@ export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): 
 }
 
 export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
-  originalObjectStore
+  idbObjectStore
 }: {
-  originalObjectStore: IDBObjectStore
+  idbObjectStore: IDBObjectStore
 }): XDBObjectStore<T> {
-  const index: XDBObjectStore<T>['index'] = (name) => getXDBIndexFromIDBIndex(originalObjectStore.index(name))
+  const index: XDBObjectStore<T>['index'] = (name) => getXDBIndexFromIDBIndex(idbObjectStore.index(name))
 
-  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(originalObjectStore.get(String(key)))
+  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore.get(String(key)))
 
   const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction } = {}) => {
     return new Promise((resolve, reject) => {
       const values = [] as any[]
-      const cursor$ = observablize(originalObjectStore.openCursor(query, direction))
+      const cursor$ = observablize(idbObjectStore.openCursor(query, direction))
       cursor$.subscribe({
         next: (cursor) => {
           if (cursor) {
@@ -43,7 +43,7 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
   }
 
   const put: XDBObjectStore<T>['put'] = async (value) => {
-    const v = await respondRequestValue(originalObjectStore.put(value))
+    const v = await respondRequestValue(idbObjectStore.put(value))
     return Boolean(v)
   }
   const putList: XDBObjectStore<T>['putList'] = (values) =>
@@ -61,14 +61,15 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
   }
 
   return {
-    _original: originalObjectStore,
-    indexNames: originalObjectStore.indexNames,
-    keyPath: originalObjectStore.keyPath,
-    autoIncrement: originalObjectStore.autoIncrement,
-    transaction: originalObjectStore.transaction,
+    _original: idbObjectStore,
+    name: idbObjectStore.name,
+    indexNames: idbObjectStore.indexNames,
+    keyPath: idbObjectStore.keyPath,
+    autoIncrement: idbObjectStore.autoIncrement,
+    transaction: idbObjectStore.transaction,
 
     index,
-    createIndex: (name, opts) => getXDBIndexFromIDBIndex<T>(originalObjectStore.createIndex(name, name, opts)),
+    createIndex: (name, opts) => getXDBIndexFromIDBIndex<T>(idbObjectStore.createIndex(name, name, opts)),
 
     getAll,
     get,

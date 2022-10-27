@@ -1,5 +1,5 @@
 import { SKeyof, Valueof } from '@edsolater/fnkit'
-import { TODO } from '../typeTools'
+import { TODO } from '../app/typeTools'
 
 export type XDBObjectStoreOptions = {
   name: string

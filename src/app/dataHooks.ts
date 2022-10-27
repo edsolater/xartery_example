@@ -1,6 +1,6 @@
 import { useAsyncEffect } from '@edsolater/hookit'
 import { useState } from 'react'
-import { getXDBObjectStore } from '../xdb/main'
+import { getXDBObjectStore } from '../xdb'
 import { AlbumItem, initData } from './dataStore'
 
 export const useXDB = () => {

@@ -1,5 +1,5 @@
 import { useXDB } from './dataHooks'
-import { useConsoleLog } from '../hooks/useConsoleLog'
+import { useConsoleLog } from '../hookit/useConsoleLog'
 
 function App() {
   const list = useXDB()

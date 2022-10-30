@@ -2,47 +2,68 @@ import { notUndefined } from '@edsolater/fnkit'
 import { mergeFunction } from '@edsolater/hookit'
 import { WeakerSet } from './WeakerSet'
 
-interface Subscription {
+export interface Subscription<T = any> {
   unsubscribe(): void
-  readonly closed: boolean
+  readonly neuron: Neuron<T>
 }
 
 function isNeuron(data: any): data is Neuron<unknown> {
   return data instanceof Neuron
 }
 
+function clone<T>(neuron: Neuron<T>): Neuron<T> {
+  return new Neuron<T>(neuron.innerData.clone(), {
+    isDead: neuron.isDead,
+    subscribers: neuron.subscribers.clone(),
+    linked: neuron.subscribedNeurons.clone()
+  })
+}
+
 export class Neuron<T> {
+  isDead: boolean
+
   innerData: WeakerSet<T>
   subscribers: WeakerSet<(item: T) => void>
   /** record linked neurons */
-  private subscribedNeurons: WeakerSet<Neuron<T>>
+  subscribedNeurons: WeakerSet<Neuron<T>>
 
   constructor(
     iterable?: Iterable<T>,
-    initProperties?: { subscribers?: Iterable<(item: T) => void>; subscribedNeurons?: Iterable<Neuron<T>> }
+    initOptions?: {
+      isDead?: boolean
+      subscribers?: Iterable<(item: T) => void>
+      linked?: Iterable<Neuron<T>>
+    }
   ) {
+    this.isDead = initOptions?.isDead ?? false
     this.innerData = new WeakerSet(iterable)
-    this.subscribers = new WeakerSet(initProperties?.subscribers)
-    this.subscribedNeurons = new WeakerSet(initProperties?.subscribedNeurons)
+    this.subscribers = new WeakerSet()
+    this.subscribedNeurons = new WeakerSet()
     this.registSubscribers()
+
+    if (initOptions?.subscribers) {
+      for (const subscriber of initOptions.subscribers) {
+        this.subscribe(subscriber)
+      }
+    }
+
+    if (initOptions?.linked) {
+      for (const otherNeuron of initOptions.linked) {
+        this.link(otherNeuron)
+      }
+    }
   }
 
   private registSubscribers() {
     this.innerData.onAddNewItem(mergeFunction(this.notifyAllSubscribers, this.notifyAllSubscribedNeurons))
   }
 
-  clone(): Neuron<T> {
-    return new Neuron<T>(this.innerData.clone(), {
-      subscribers: this.subscribers.clone(),
-      subscribedNeurons: this.subscribedNeurons.clone()
-    })
-  }
   /**
    * make neuron have more feature
    *
    * !`undefined` item will not pass to next operator
    *
-   * ! it will also discard all subscribers(attached by {@link onItem}; disattached by {@link disonItem}) and subscribedNeurons(attached by {@link link}; disattached by {@link unlink})
+   * ! it will also discard all subscribers(attached by {@link subscribe}; disattached by {@link unsubscribe}) and subscribedNeurons(attached by {@link link}; disattached by {@link unlink})
    */
   dealWith<U>(operatorA: (item: T) => U): Neuron<U>
   dealWith<U, K>(operatorA: (item: T) => U, operatorB: (item: U) => K): Neuron<K>
@@ -73,56 +94,37 @@ export class Neuron<T> {
    *
    * it core is `B.subscrive(this)`
    **/
-  link(...otherNeurons: Neuron<T>[]): this {
-    otherNeurons.forEach((otherNeuron) => {
-      otherNeuron.acceptSubscriptionFromNeuron(this)
-    })
+  private link(otherNeuron: Neuron<T>): this {
+    otherNeuron.subscribedNeurons.add(this)
     return this
   }
 
-  /** like neuron is dead */
-  unlink(...otherNeurons: Neuron<T>[]): this {
-    otherNeurons.forEach((otherNeuron) => {
-      otherNeuron.disconnectFromNeuron(this)
-    })
-    return this
-  }
-
-  /** used by other neuron's {@link link} */
-  private acceptSubscriptionFromNeuron(neuron: Neuron<any>): this {
-    neuron.subscribedNeurons.add(this)
-    return this
-  }
-
-  /** used by other neuron's {@link unlink} */
-  private disconnectFromNeuron(neuron: Neuron<any>): this {
-    neuron.subscribedNeurons.delete(this)
-    return this
-  }
-
-  onItem(callback: (item: T) => void): this {
+  subscribe(callback: (item: T) => void): Subscription<T> {
     this.subscribers.add(callback)
-    return this
+    return {
+      neuron: this,
+      unsubscribe: () => this.unsubscribe(callback)
+    }
   }
 
-  disonItem(callback: (item: T) => void): this {
+  private unsubscribe(callback: (item: T) => void): this {
     this.subscribers.delete(callback)
     return this
   }
 
   private notifyAllSubscribers(item: T): void {
+    if (this.isDead) return
     this.subscribers.forEach((cb) => cb?.(item))
   }
 
   private notifyAllSubscribedNeurons(item: T): void {
+    if (this.isDead) return
     this.subscribedNeurons.forEach((neuron) => neuron.infuse(item, { fromNeuron: this }))
   }
 
   /** lifetime: self is dead */
   destory(): void {
-    this.subscribedNeurons.forEach((otherNeuron) => {
-      otherNeuron.disconnectFromNeuron(this)
-    })
+    this.isDead = true
   }
 
   /** core input */

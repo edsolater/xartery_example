@@ -1,121 +1,112 @@
-import { isObject } from '@edsolater/fnkit'
+// interface WeakerMap<K, V> extends Map<K, V> {
+//   hello(): string
+// }
 
-const createWrapperRef = <T extends object>(v: T) => new WeakRef(v)
+import { isObject, map } from '@edsolater/fnkit'
+
+const weakMapCache = new WeakMap<object, WeakRef<any>>()
+const createWrapperRef = <T extends object>(v: T): WeakRef<T> => {
+  if (!weakMapCache.has(v)) {
+    weakMapCache.set(v, new WeakRef(v))
+  }
+  return weakMapCache.get(v)!
+}
+
 const createWrapperRefIfNeeded = <T>(v: T) => (isObject(v) ? createWrapperRef(v) : v)
 const derefWrapperRefIfNeeded = <T>(v: T) => (v instanceof WeakRef ? v.deref() : v)
 
 /** it wont prevent GC for both key and value , and weakMap can be traverse
  * @todo test it!!!
  */
-export class WeakerMap<K, V> extends Map<K, V> {
-  private objectKeyMap: WeakMap<K & object, WeakRef<K & object>>
-  // could find by value
-  private reverseObjectKeyMap: WeakMap<WeakRef<K & object>, K & object>
-  private innerStoreMap: Map<K | WeakRef<K & object>, V | WeakRef<V & object>>
-  
-  constructor()
-  constructor(entries?: readonly (readonly [K, V])[] | null) {
-    super(entries)
-    this.reverseObjectKeyMap = new WeakerMap()
-    this.objectKeyMap = new WeakerMap()
-    this.innerStoreMap = new Map()
-    entries?.forEach(([k, v]) => this.set(k, v))
+export class WeakerSet<T> extends Set<T> {
+  private innerStoreSet: Set<T | WeakRef<T & object>>
+
+  private cbCenter = {
+    onAddNewItem: [] as ((item: T) => void)[]
   }
 
-  private getInnerKey(key: K) {
-    if (isObject(key)) {
-      if (!this.objectKeyMap.has(key)) {
-        const refedValue = createWrapperRef(key)
-        this.objectKeyMap.set(key, refedValue)
-        this.reverseObjectKeyMap.set(refedValue, key)
+  constructor(iterable?: Iterable<T> | null) {
+    super(iterable)
+    this.innerStoreSet = new Set()
+    if (iterable) {
+      for (const item of iterable) {
+        this.add(item)
       }
-      return this.objectKeyMap.get(key)!
-    } else {
-      return key
     }
   }
 
-  override set(key: K, value: V): this {
-    const innerKey = this.getInnerKey(key)
-    this.innerStoreMap.set(innerKey, createWrapperRefIfNeeded(value))
+  override add(item: T): this {
+    this.innerStoreSet.add(createWrapperRefIfNeeded(item))
+    this.invokeAddNewItemCallbacks(item)
     return this
   }
 
-  override get(key: K): V | undefined {
-    const innerKey = this.getInnerKey(key)
-    return derefWrapperRefIfNeeded(this.innerStoreMap.get(innerKey))
+  private getRealSet(): Set<T> {
+    return new Set(
+      [...this.innerStoreSet.values()].map((item) => derefWrapperRefIfNeeded(item)).filter((i) => i !== undefined)
+    )
   }
 
-  override forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void {
-    const stillValidMap = new Map(
-      [...this.innerStoreMap.entries()].map(([innerKey, refValue]) => [
-        derefWrapperRefIfNeeded(innerKey),
-        derefWrapperRefIfNeeded(refValue)
-      ]) as unknown as Map<K, V>
-    )
-    stillValidMap.forEach(callbackfn, thisArg)
+  override forEach(callback: (value: T, key: T, set: Set<T>) => void, thisArg?: any): void {
+    this.getRealSet().forEach(callback, thisArg)
+  }
+
+  map<U>(callback: (value: T) => U, thisArg?: any): WeakerSet<U> {
+    return new WeakerSet([...this.getRealSet()].map(callback, thisArg))
+  }
+
+  filter(callback: (item: T) => any, thisArg?: any): WeakerSet<T> {
+    return new WeakerSet([...this.getRealSet()].filter(callback, thisArg))
+  }
+  // TODO other Array build-in tools
+
+  private invokeAddNewItemCallbacks(item: T): void {
+    this.cbCenter.onAddNewItem.forEach((cb) => cb?.(item))
+  }
+
+  onAddNewItem(callback: (item: T) => void): this {
+    this.cbCenter.onAddNewItem.push(callback)
+    return this
+  }
+
+  /** return a new instance  */
+  clone(): WeakerSet<T> {
+    const newItem = new WeakerSet<T>()
+    newItem.innerStoreSet = new Set(this.innerStoreSet)
+    newItem.cbCenter = { ...map(this.cbCenter, (cbs) => [...cbs]) }
+    return newItem
   }
 
   override get size() {
-    const stillValidMap = new Map(
-      [...this.innerStoreMap.entries()].map(([innerKey, refValue]) => [
-        derefWrapperRefIfNeeded(innerKey),
-        derefWrapperRefIfNeeded(refValue)
-      ]) as unknown as Map<K, V>
-    )
-    return stillValidMap.size
+    return this.getRealSet().size
   }
 
-  override delete(key: K): boolean {
-    const innerKey = this.getInnerKey(key)
-    if (isObject(key)) {
-      const ref = this.objectKeyMap.get(key)
-      if (ref) {
-        this.reverseObjectKeyMap.delete(ref)
-      }
-      this.objectKeyMap.delete(key)
-    }
-    return this.innerStoreMap.delete(innerKey)
+  override delete(item: T): boolean {
+    return this.innerStoreSet.delete(createWrapperRefIfNeeded(item))
   }
 
   override clear(): void {
-    return this.innerStoreMap.clear()
+    return this.innerStoreSet.clear()
   }
 
-  override has(key: K): boolean {
-    return this.get(key) != null
+  override has(item: T): boolean {
+    return this.getRealSet().has(item)
   }
 
-  override *keys(): IterableIterator<K> {
-    for (const [trueKey] of this.entries()) {
-      yield trueKey
-    }
+  override *keys(): IterableIterator<T> {
+    yield* this.values()
   }
 
-  override *values(): IterableIterator<V> {
-    for (const [, trueValue] of this.entries()) {
-      yield trueValue
-    }
+  override *values(): IterableIterator<T> {
+    yield* this.getRealSet()
   }
 
-  override *entries(): IterableIterator<[K, V]> {
-    for (const [innerKey, innerValue] of this.innerStoreMap.entries()) {
-      if (isObject(innerKey)) {
-        const trueKey = this.reverseObjectKeyMap.get(innerKey)
-        if (!trueKey) continue
-        const trueValue = derefWrapperRefIfNeeded(innerValue)
-        if (trueValue != null) {
-          yield [trueKey, trueValue]
-        } else {
-          continue
-        }
+  override *entries(): IterableIterator<[T, T]> {
+    for (const item of this.getRealSet()) {
+      if (item != null) {
+        yield [item, item]
       } else {
-        const trueValue = derefWrapperRefIfNeeded(innerValue)
-        if (trueValue != null) {
-          yield [innerKey, trueValue]
-        } else {
-          continue
-        }
+        continue
       }
     }
   }

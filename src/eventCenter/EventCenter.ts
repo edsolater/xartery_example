@@ -1,9 +1,6 @@
-import { AnyFn, forEach } from '@edsolater/fnkit'
-
-interface Subscription<F extends AnyFn | undefined> {
-  unsubscribe(): void
-  readonly attached: boolean
-}
+import { AnyFn, map } from '@edsolater/fnkit'
+import { WeakerSet } from '../neuron/WeakerSet'
+import { createSubscription, Subscription } from './Subscription'
 
 type EventConfig = {
   [eventName: string]: AnyFn
@@ -24,7 +21,7 @@ type EventCenter<T extends EventConfig> = {
 
 // 💡 observable should be the core of js model. just like event target is the core of DOM
 export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
-  const callbackCenter = new Map<keyof T, AnyFn[]>()
+  const callbackCenter = new Map<keyof T, WeakerSet<AnyFn>>()
 
   const emit = ((eventName, paramters) => {
     const handlerFns = callbackCenter.get(eventName)
@@ -33,15 +30,22 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     })
   }) as EventCenter<T>['emit']
 
-  const on = ((subscriptionFns) => {
-    forEach(subscriptionFns, (handlerFn, eventName) => {
+  const on = ((subscriptionFns) =>
+    map(subscriptionFns, (handlerFn, eventName) => {
       // @ts-expect-error no need to care
-      callbackCenter.set(eventName, (callbackCenter.get(eventName) ?? []).concat(handlerFn))
-    })
-  }) as EventCenter<T>['on']
+      callbackCenter.set(eventName, (callbackCenter.get(eventName) ?? new WeakerSet()).add(handlerFn))
+      const subscription = createSubscription({
+        unsubscribe() {
+          // @ts-expect-error no need to care
+          callbackCenter.set(eventName, callbackCenter.get(eventName)?.delete(handlerFn))
+        }
+      })
+      return subscription
+    })) as EventCenter<T>['on']
 
   const specifiedOn = (eventName: string, handlerFn: AnyFn) => {
-    on({ [eventName]: handlerFn } as Partial<T>)
+    const { [eventName]: subscription } = on({ [eventName]: handlerFn } as Partial<T>)
+    return subscription
   }
 
   const eventCenter = new Proxy(

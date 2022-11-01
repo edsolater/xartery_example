@@ -34,7 +34,6 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     callbackCenter.set(eventName, (callbackCenter.get(eventName) ?? new WeakerSet()).add(handlerFn))
     const subscription = Subscription.of({
       unsubscribe() {
-        //@ts-expect-error 
         callbackCenter.get(eventName)?.delete(handlerFn)
       }
     })

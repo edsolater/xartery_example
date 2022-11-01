@@ -12,7 +12,7 @@ type EventCenter<T extends EventConfig> = {
    */
   register<N extends keyof T>(eventName: N, handlerFn: T[N]): void
   emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
-  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: Subscription<U[P]> }
+  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? Subscription<U[P]> : undefined }
 } & {
   [P in keyof T as `on${Capitalize<P & string>}`]: (
     subscriptionFn: (...params: Parameters<T[P]>) => void
@@ -30,23 +30,22 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     })
   }) as EventCenter<T>['emit']
 
-  const on = ((subscriptionFns) =>
-    map(subscriptionFns, (handlerFn, eventName) => {
-      // @ts-expect-error no need to care
-      callbackCenter.set(eventName, (callbackCenter.get(eventName) ?? new WeakerSet()).add(handlerFn))
-      const subscription = Subscription.of({
-        unsubscribe() {
-          // @ts-expect-error no need to care
-          callbackCenter.set(eventName, callbackCenter.get(eventName)?.delete(handlerFn))
-        }
-      })
-      return subscription
-    })) as EventCenter<T>['on']
-
   const specifiedOn = (eventName: string, handlerFn: AnyFn) => {
-    const { [eventName]: subscription } = on({ [eventName]: handlerFn } as Partial<T>)
+    callbackCenter.set(eventName, (callbackCenter.get(eventName) ?? new WeakerSet()).add(handlerFn))
+    const subscription = Subscription.of({
+      unsubscribe() {
+        //@ts-expect-error 
+        callbackCenter.get(eventName)?.delete(handlerFn)
+      }
+    })
     return subscription
   }
+
+  const on = ((subscriptionFns) =>
+    map(
+      subscriptionFns,
+      (handlerFn, eventName) => handlerFn && specifiedOn(String(eventName), handlerFn)
+    )) as EventCenter<T>['on']
 
   const eventCenter = new Proxy(
     { on, emit },

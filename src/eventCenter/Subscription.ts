@@ -6,8 +6,8 @@ export interface Subscription<F extends AnyFn | undefined> {
 
 export function Subscription() {}
 
-function createSubscription<F extends AnyFn | undefined>(info: { unsubscribe(): void }): Subscription<F> {
+function createSubscriptionInstance<F extends AnyFn | undefined>(info: { unsubscribe(): void }): Subscription<F> {
   return { unsubscribe: info.unsubscribe }
 }
 
-Subscription.of = createSubscription
+Subscription.of = createSubscriptionInstance

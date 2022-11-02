@@ -2,11 +2,14 @@ import { useXDB } from './dataHooks'
 import { useConsoleLog } from '../hookit/useConsoleLog'
 
 function App() {
-  const list = useXDB()
+  const { list, insertAnNewItem } = useXDB()
   useConsoleLog({ list })
-  return <div className='App'>hello xartery</div>
+  return (
+    <div className='App'>
+      <div>hello xartery</div>
+      <button onClick={insertAnNewItem}>Insert Item</button>
+    </div>
+  )
 }
 
 export default App
-
-

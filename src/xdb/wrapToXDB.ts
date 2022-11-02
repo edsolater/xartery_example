@@ -44,6 +44,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     })
 
   const put: XDBObjectStore<T>['put'] = async (value) => {
+    console.log('put value: ', value)
     const v = await respondRequestValue(objectStore().put(value))
     return Boolean(v)
   }

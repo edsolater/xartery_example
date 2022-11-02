@@ -1,10 +1,12 @@
-import { useAsyncEffect } from '@edsolater/hookit'
-import { useState } from 'react'
+import { useAsyncEffect, useEvent } from '@edsolater/hookit'
+import { useRef, useState } from 'react'
 import { getXDBObjectStore } from '../xdb'
-import { AlbumItem, initData } from './dataStore'
+import { XDBObjectStore } from '../xdb/type'
+import { AlbumItem, initData } from './dataShape'
 
 export const useXDB = () => {
   const [list, setList] = useState<AlbumItem[]>([])
+  const objectStoreRef = useRef<XDBObjectStore<AlbumItem>>()
   useAsyncEffect(async () => {
     const objectStore = await getXDBObjectStore<AlbumItem>({
       dbOptions: {
@@ -17,7 +19,17 @@ export const useXDB = () => {
         initRecords: initData
       }
     })
+    objectStoreRef.current = objectStore
     setList(await objectStore.getAll())
   }, [])
-  return list
+
+  const count = useRef(1)
+  const insertAnNewItem = useEvent(() => {
+    const newItem = { title: 'test', year: count.current } as AlbumItem
+    count.current += 1
+    objectStoreRef.current?.put(newItem)
+    
+
+  })
+  return { list, insertAnNewItem }
 }

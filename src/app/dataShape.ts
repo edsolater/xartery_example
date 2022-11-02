@@ -10,8 +10,8 @@ export const initData = [
   { title: 'Caress of steel', year: 1975 },
   { title: 'Fly by night', year: 1975 },
   { title: 'Rush', year: 1974 }
-];
+]
 export type AlbumItem = {
-  title: string;
-  year: number;
-};
+  title: string
+  year: number
+}

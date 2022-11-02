@@ -1,3 +1,4 @@
+import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { observablize, respondRequestValue } from './tools'
 import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
 
@@ -17,7 +18,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   transactionMode?: IDBTransactionMode
 }): XDBObjectStore<T> {
   const xdb = wrapToXDB(idb)
-  const objectStore = () => getIdbTransaction(idb, name, transactionMode).objectStore(name)
+  const objectStore = () => cachelyGetIdbTransaction({ idb, name, transactionMode }).objectStore(name)
 
   const index: XDBObjectStore<T>['index'] = (name) => wrapToXDBIndex(objectStore().index(name))
 
@@ -93,10 +94,6 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     delete: deleteFn,
     clear
   }
-}
-
-function getIdbTransaction(idb: IDBDatabase, name: string, transactionMode: IDBTransactionMode) {
-  return idb.transaction(name, transactionMode)
 }
 
 export function wrapToXDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {

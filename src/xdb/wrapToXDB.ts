@@ -1,36 +1,32 @@
 import { observablize, respondRequestValue } from './tools'
 import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
 
-export function getXDBFromOriginalIDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
+export function wrapToXDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
   const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode = 'readwrite' }) =>
-    getXDBObjectStoreFromIDBObjectStore({
-      idb,
-      idbObjectStore: idb.transaction(name, transactionMode).objectStore(name)
-    })
-
-  return {
-    _original: idb,
-    getObjectStore
-  }
+    wrapToXDBObjectStore({ idb, name, transactionMode })
+  return { _original: idb, getObjectStore }
 }
 
-export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
+export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
   idb,
-  idbObjectStore
+  name,
+  transactionMode = 'readwrite'
 }: {
   idb: IDBDatabase
-  idbObjectStore: IDBObjectStore
+  name: string
+  transactionMode?: IDBTransactionMode
 }): XDBObjectStore<T> {
-  const xdb = getXDBFromOriginalIDB(idb)
+  const xdb = wrapToXDB(idb)
+  const objectStore = () => getIdbTransaction(idb, name, transactionMode).objectStore(name)
 
-  const index: XDBObjectStore<T>['index'] = (name) => getXDBIndexFromIDBIndex(idbObjectStore.index(name))
+  const index: XDBObjectStore<T>['index'] = (name) => wrapToXDBIndex(objectStore().index(name))
 
-  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore.get(String(key)))
+  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(objectStore().get(String(key)))
 
-  const getAll: XDBObjectStore<T>['getAll'] = async ({ query, direction } = {}) => {
-    return new Promise((resolve, reject) => {
+  const getAll: XDBObjectStore<T>['getAll'] = ({ query, direction } = {}) =>
+    new Promise((resolve, reject) => {
       const values = [] as any[]
-      const cursor$ = observablize(idbObjectStore.openCursor(query, direction))
+      const cursor$ = observablize(objectStore().openCursor(query, direction))
       cursor$.subscribe({
         next: (cursor) => {
           if (cursor) {
@@ -45,10 +41,9 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
         }
       })
     })
-  }
 
   const put: XDBObjectStore<T>['put'] = async (value) => {
-    const v = await respondRequestValue(idbObjectStore.put(value))
+    const v = await respondRequestValue(objectStore().put(value))
     return Boolean(v)
   }
   const putList: XDBObjectStore<T>['putList'] = (values) =>
@@ -66,17 +61,29 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
   }
 
   return {
-    _original: idbObjectStore,
-    transaction: idbObjectStore.transaction,
+    get _original() {
+      return objectStore()
+    },
+    get transaction() {
+      return objectStore().transaction
+    },
     xdb,
 
-    name: idbObjectStore.name,
-    indexNames: idbObjectStore.indexNames,
-    keyPath: idbObjectStore.keyPath,
-    autoIncrement: idbObjectStore.autoIncrement,
+    get name() {
+      return objectStore().name
+    },
+    get indexNames() {
+      return objectStore().indexNames
+    },
+    get keyPath() {
+      return objectStore().keyPath
+    },
+    get autoIncrement() {
+      return objectStore().autoIncrement
+    },
 
     index,
-    createIndex: (name, opts) => getXDBIndexFromIDBIndex<T>(idbObjectStore.createIndex(name, name, opts)),
+    createIndex: (name, opts) => wrapToXDBIndex<T>(objectStore().createIndex(name, name, opts)),
 
     getAll,
     get,
@@ -88,7 +95,11 @@ export function getXDBObjectStoreFromIDBObjectStore<T extends XDBRecordTemplate 
   }
 }
 
-export function getXDBIndexFromIDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {
+function getIdbTransaction(idb: IDBDatabase, name: string, transactionMode: IDBTransactionMode) {
+  return idb.transaction(name, transactionMode)
+}
+
+export function wrapToXDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {
   const get: XDBIndex<T>['get'] = () => {
     throw 'not'
   }

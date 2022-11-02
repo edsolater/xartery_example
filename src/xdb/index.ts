@@ -1,6 +1,6 @@
 import { SKeyof } from '@edsolater/fnkit'
 import { XDBObjectStoreOptions, XDBDatabase, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
-import { getXDBFromOriginalIDB } from './wrapToXDB'
+import { wrapToXDB } from './wrapToXDB'
 
 type XDBOptions = {
   name: string
@@ -12,12 +12,12 @@ type XDBOptions = {
  * event:blocked or event:error will be a rejected promise
  * event:success will be a resolved promise
  */
-export function getXDB<S extends XDBTemplate = XDBTemplate>(params: XDBOptions): Promise<XDBDatabase<S>> {
+function getXDB<S extends XDBTemplate = XDBTemplate>(params: XDBOptions): Promise<XDBDatabase<S>> {
   return new Promise((resolve, reject) => {
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', () => {
       const originalIDB = originalRequest.result
-      const xdb = getXDBFromOriginalIDB(originalIDB)
+      const xdb = wrapToXDB(originalIDB)
       resolve(xdb)
     })
     originalRequest.addEventListener('error', (ev) => reject(ev))

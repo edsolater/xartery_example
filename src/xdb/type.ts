@@ -14,13 +14,12 @@ export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
 export type XDBObjectStore<T extends XDBRecordTemplate> = {
   _original: IDBObjectStore
   transaction: IDBObjectStore['transaction']
-  xdb:XDBDatabase 
+  xdb: XDBDatabase
 
   name: IDBObjectStore['name']
   indexNames: IDBObjectStore['indexNames']
   keyPath: IDBObjectStore['keyPath']
   autoIncrement: IDBObjectStore['autoIncrement']
-  
 
   // NOTE: temporary do not care about objectStore's index
   /** hanle index */
@@ -36,6 +35,8 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   delete(key: SKeyof<T>): Promise<boolean>
   clear(): Promise<boolean>
   /** @todo more operate methods */
+
+  onChange(cb: () => void): XDBObjectStore<T> // not imply yet!!
 }
 
 export type XDBIndex<T> = {

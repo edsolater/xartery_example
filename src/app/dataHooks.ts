@@ -20,6 +20,9 @@ export const useXDB = () => {
       }
     })
     objectStoreRef.current = objectStore
+    objectStore.onChange(() => {
+      console.log(2)
+    })
     setList(await objectStore.getAll())
   }, [])
 
@@ -28,8 +31,6 @@ export const useXDB = () => {
     const newItem = { title: 'test', year: count.current } as AlbumItem
     count.current += 1
     objectStoreRef.current?.put(newItem)
-    
-
   })
   return { list, insertAnNewItem }
 }

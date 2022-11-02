@@ -18,16 +18,17 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   transactionMode?: IDBTransactionMode
 }): XDBObjectStore<T> {
   const xdb = wrapToXDB(idb)
-  const objectStore = () => cachelyGetIdbTransaction({ idb, name, transactionMode }).objectStore(name)
+  const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
+  const idbObjectStore = () => idbTransaction().objectStore(name)
 
-  const index: XDBObjectStore<T>['index'] = (name) => wrapToXDBIndex(objectStore().index(name))
+  const index: XDBObjectStore<T>['index'] = (name) => wrapToXDBIndex(idbObjectStore().index(name))
 
-  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(objectStore().get(String(key)))
+  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore().get(String(key)))
 
   const getAll: XDBObjectStore<T>['getAll'] = ({ query, direction } = {}) =>
     new Promise((resolve, reject) => {
       const values = [] as any[]
-      const cursor$ = observablize(objectStore().openCursor(query, direction))
+      const cursor$ = observablize(idbObjectStore().openCursor(query, direction))
       cursor$.subscribe({
         next: (cursor) => {
           if (cursor) {
@@ -45,7 +46,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
 
   const put: XDBObjectStore<T>['put'] = async (value) => {
     console.log('put value: ', value)
-    const v = await respondRequestValue(objectStore().put(value))
+    const v = await respondRequestValue(idbObjectStore().put(value))
     return Boolean(v)
   }
   const putList: XDBObjectStore<T>['putList'] = (values) =>
@@ -61,31 +62,36 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   const clear: XDBObjectStore<T>['clear'] = () => {
     throw 'not imply yet'
   }
+  const onChange: XDBObjectStore<T>['onChange'] = (fn) => {
+    const transaction = idbTransaction()
+    transaction.addEventListener('complete', fn)
+    return objectStore
+  }
 
-  return {
+  const objectStore: XDBObjectStore<T> = {
     get _original() {
-      return objectStore()
+      return idbObjectStore()
     },
     get transaction() {
-      return objectStore().transaction
+      return idbObjectStore().transaction
     },
     xdb,
 
     get name() {
-      return objectStore().name
+      return idbObjectStore().name
     },
     get indexNames() {
-      return objectStore().indexNames
+      return idbObjectStore().indexNames
     },
     get keyPath() {
-      return objectStore().keyPath
+      return idbObjectStore().keyPath
     },
     get autoIncrement() {
-      return objectStore().autoIncrement
+      return idbObjectStore().autoIncrement
     },
 
     index,
-    createIndex: (name, opts) => wrapToXDBIndex<T>(objectStore().createIndex(name, name, opts)),
+    createIndex: (name, opts) => wrapToXDBIndex<T>(idbObjectStore().createIndex(name, name, opts)),
 
     getAll,
     get,
@@ -93,8 +99,11 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     putList,
 
     delete: deleteFn,
-    clear
+    clear,
+
+    onChange
   }
+  return objectStore
 }
 
 export function wrapToXDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {

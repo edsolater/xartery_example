@@ -7,10 +7,6 @@ type EventConfig = {
 }
 
 type EventCenter<T extends EventConfig> = {
-  /**
-   * for server-provider
-   */
-  register<N extends keyof T>(eventName: N, handlerFn: T[N]): void
   emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
   on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? Subscription<U[P]> : undefined }
 } & {
@@ -19,6 +15,23 @@ type EventCenter<T extends EventConfig> = {
   ) => Subscription<T[P]>
 }
 
+/**
+ * 
+ * @example
+ *  // client side
+ * cc.on({
+ *   change({ status }) {
+ *     // status is 'success' | 'error'
+ *     // do something
+ *   }
+ * })
+ * cc.onChange(({ status }) => {
+ *   // status is 'success' | 'error'
+ * })
+ * 
+ * // server side
+ * cc.emit('change', [{ status: 'success' }])
+ */
 // 💡 observable should be the core of js model. just like event target is the core of DOM
 export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
   const callbackCenter = new Map<keyof T, WeakerSet<AnyFn>>()
@@ -58,3 +71,19 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
   ) as unknown as EventCenter<T>
   return eventCenter
 }
+
+const cc = createEventCenter<{ change: (event: { status: 'success' | 'error' }) => void }>()
+
+// client side
+cc.on({
+  change({ status }) {
+    // status is 'success' | 'error'
+    // do something
+  }
+})
+cc.onChange(({ status }) => {
+  // status is 'success' | 'error'
+})
+
+// server side
+cc.emit('change', [{ status: 'success' }])

@@ -4,10 +4,20 @@ export interface Subscription<F extends AnyFn | undefined> {
   unsubscribe(): void
 }
 
-export function Subscription() {}
+// inner method
+function createSubscriptionInstance<F extends AnyFn | undefined>(info: { onUnsubscribe(): void }): Subscription<F> {
+  return { unsubscribe: info.onUnsubscribe }
+}
 
-function createSubscriptionInstance<F extends AnyFn | undefined>(info: { unsubscribe(): void }): Subscription<F> {
-  return { unsubscribe: info.unsubscribe }
+/**
+ * @example
+ * const s = Subscription({ onUnsubscribe: () => {} })
+ */
+export function Subscription<F extends AnyFn = any>(
+  ...params: Parameters<typeof createSubscriptionInstance>
+): Subscription<F> {
+  const instance = createSubscriptionInstance<F>(...params)
+  return instance
 }
 
 Subscription.of = createSubscriptionInstance

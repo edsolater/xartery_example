@@ -21,7 +21,7 @@ export const useXDB = () => {
     })
     objectStoreRef.current = objectStore
     objectStore.onChange(() => {
-      console.log(2)
+      console.log('idb value changed')
     })
     setList(await objectStore.getAll())
   }, [])

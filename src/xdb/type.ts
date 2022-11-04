@@ -1,5 +1,6 @@
 import { SKeyof, Valueof } from '@edsolater/fnkit'
 import { TODO } from '../app/types'
+import { EventCenter } from '../eventCenter/EventCenter'
 
 export type XDBObjectStoreOptions = {
   name: string
@@ -35,9 +36,7 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   delete(key: SKeyof<T>): Promise<boolean>
   clear(): Promise<boolean>
   /** @todo more operate methods */
-
-  onChange(cb: () => void): XDBObjectStore<T> // not imply yet!!
-}
+} & EventCenter<{ change: () => void }>
 
 export type XDBIndex<T> = {
   _original: IDBIndex

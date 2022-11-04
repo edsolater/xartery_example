@@ -1,4 +1,4 @@
-import { AnyFn, map } from '@edsolater/fnkit'
+import { AnyFn, capitalize, map } from '@edsolater/fnkit'
 import { WeakerSet } from '../neuron/WeakerSet'
 import { Subscription } from './Subscription'
 
@@ -6,17 +6,15 @@ type EventConfig = {
   [eventName: string]: AnyFn
 }
 
-type EventCenter<T extends EventConfig> = {
+export type EventCenter<T extends EventConfig> = {
   emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
-  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? Subscription<U[P]> : undefined }
+  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? void : void }
 } & {
-  [P in keyof T as `on${Capitalize<P & string>}`]: (
-    subscriptionFn: (...params: Parameters<T[P]>) => void
-  ) => Subscription<T[P]>
+  [P in keyof T as `on${Capitalize<P & string>}`]: (subscriptionFn: (...params: Parameters<T[P]>) => void) => void
 }
 
 /**
- * 
+ *
  * @example
  *  // client side
  * cc.on({
@@ -28,12 +26,24 @@ type EventCenter<T extends EventConfig> = {
  * cc.onChange(({ status }) => {
  *   // status is 'success' | 'error'
  * })
- * 
+ *
  * // server side
  * cc.emit('change', [{ status: 'success' }])
  */
 // 💡 observable should be the core of js model. just like event target is the core of DOM
-export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
+export function EventCenter<T extends EventConfig>(
+  whenEmit?: {
+    [P in keyof T as `whenListen${Capitalize<P & string>}`]?: (utils: {
+      fn: (...params: Parameters<T[P]>) => void
+      emit: EventCenter<T>['emit']
+    }) => void
+  } & {
+    [P in keyof T as `whenListen${Capitalize<P & string>}Initly`]?: (utils: {
+      fn: (...params: Parameters<T[P]>) => void
+      emit: EventCenter<T>['emit']
+    }) => void
+  }
+): EventCenter<T> {
   const storedCallbackStore = new Map<keyof T, WeakerSet<AnyFn>>()
 
   const emit = ((eventName, paramters) => {
@@ -43,11 +53,14 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     })
   }) as EventCenter<T>['emit']
 
-  const subscribeOnAnEvent = (eventName: string, handlerFn: AnyFn) => {
-    storedCallbackStore.set(eventName, (storedCallbackStore.get(eventName) ?? new WeakerSet()).add(handlerFn))
-    const subscription = Subscription.of({
+  const singlelyOn = (eventName: string, fn: AnyFn) => {
+    storedCallbackStore.set(eventName, (storedCallbackStore.get(eventName) ?? new WeakerSet()).add(fn))
+    whenEmit?.[`whenListen${capitalize(eventName)}`]?.({ fn, emit })
+    if (!storedCallbackStore.has(eventName)) whenEmit?.[`whenListen${capitalize(eventName)}Initly`]?.({ fn, emit })
+
+    const subscription = Subscription({
       onUnsubscribe() {
-        storedCallbackStore.get(eventName)?.delete(handlerFn)
+        storedCallbackStore.get(eventName)?.delete(fn)
       }
     })
     subscription.unsubscribe()
@@ -57,7 +70,7 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
   const on = ((subscriptionFns) =>
     map(
       subscriptionFns,
-      (handlerFn, eventName) => handlerFn && subscribeOnAnEvent(String(eventName), handlerFn)
+      (handlerFn, eventName) => handlerFn && singlelyOn(String(eventName), handlerFn)
     )) as EventCenter<T>['on']
 
   const eventCenter = new Proxy(
@@ -65,7 +78,7 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     {
       get(target, p) {
         if (target[p] !== undefined) return target[p]
-        if (String(p).startsWith('on')) return (p: string, handler: AnyFn) => subscribeOnAnEvent(p, handler)
+        if (String(p).startsWith('on')) return (p: string, handler: AnyFn) => singlelyOn(p, handler)
         return undefined
       }
     }
@@ -73,3 +86,15 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
   return eventCenter
 }
 
+export function mergeEventCenterFeature<O extends object, T extends EventConfig>(
+  targetObject: O,
+  eventCenter: EventCenter<T>
+): O & EventCenter<T> {
+  const merged = new Proxy(targetObject, {
+    get(target, p) {
+      if (p in targetObject) return target[p]
+      return eventCenter[p]
+    }
+  }) as O & EventCenter<T>
+  return merged
+}

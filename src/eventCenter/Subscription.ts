@@ -7,5 +7,3 @@ export interface Subscription<F extends AnyFn | undefined> {
 export function Subscription<F extends AnyFn | undefined>(info: { onUnsubscribe(): void }): Subscription<F> {
   return { unsubscribe: info.onUnsubscribe }
 }
-
-Subscription.of = Subscription

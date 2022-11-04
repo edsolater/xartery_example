@@ -1,3 +1,5 @@
+import { AnyFn } from '@edsolater/fnkit'
+import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { observablize, respondRequestValue } from './tools'
 import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
@@ -44,10 +46,10 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
       })
     })
 
-  const put: XDBObjectStore<T>['put'] = async (value) => {
+  const put: XDBObjectStore<T>['put'] = (value) => {
     console.log('put value: ', value)
-    const v = await respondRequestValue(idbObjectStore().put(value))
-    return Boolean(v)
+    const actionRequest = idbObjectStore().put(value)
+    return respondRequestValue(actionRequest).then((v) => Boolean(v))
   }
 
   const putList: XDBObjectStore<T>['putList'] = (values) =>
@@ -63,48 +65,62 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   const clear: XDBObjectStore<T>['clear'] = () => {
     throw 'not imply yet'
   }
-  
-  const onChange: XDBObjectStore<T>['onChange'] = (fn) => {
-    const transaction = idbTransaction()
-    transaction.addEventListener('complete', fn)
-    return objectStore
-  }
 
-  const objectStore: XDBObjectStore<T> = {
-    get _original() {
-      return idbObjectStore()
-    },
-    get transaction() {
-      return idbObjectStore().transaction
-    },
-    xdb,
+  // const onChange: XDBObjectStore<T>['onChange'] = (fn) => {
+  //   const transaction = idbTransaction()
+  //   transaction.addEventListener('complete', fn)
+  //   return objectStore
+  // }
 
-    get name() {
-      return idbObjectStore().name
-    },
-    get indexNames() {
-      return idbObjectStore().indexNames
-    },
-    get keyPath() {
-      return idbObjectStore().keyPath
-    },
-    get autoIncrement() {
-      return idbObjectStore().autoIncrement
-    },
+  const eventCenter = EventCenter<{ change: () => void }>({
+    whenListenChangeInitly({ emit }) {
+      const transaction = idbTransaction()
+      transaction.addEventListener('complete', () => {
+        emit('change', [])
+      })
+    }
+  })
 
-    index,
-    createIndex: (name, opts) => wrapToXDBIndex<T>(idbObjectStore().createIndex(name, name, opts)),
+  const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<T> =>
+    wrapToXDBIndex<T>(idbObjectStore().createIndex(name, name, opts))
 
-    getAll,
-    get,
-    put,
-    putList,
+  const objectStore = mergeEventCenterFeature(
+    {
+      get _original() {
+        return idbObjectStore()
+      },
+      get transaction() {
+        return idbObjectStore().transaction
+      },
+      xdb,
 
-    delete: deleteFn,
-    clear,
+      get name() {
+        return idbObjectStore().name
+      },
+      get indexNames() {
+        return idbObjectStore().indexNames
+      },
+      get keyPath() {
+        return idbObjectStore().keyPath
+      },
+      get autoIncrement() {
+        return idbObjectStore().autoIncrement
+      },
 
-    onChange
-  }
+      index,
+      createIndex,
+
+      getAll,
+      get,
+      put,
+      putList,
+
+      delete: deleteFn,
+      clear
+    },
+    eventCenter
+  )
+
   return objectStore
 }
 

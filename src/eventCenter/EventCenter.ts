@@ -7,10 +7,6 @@ type EventConfig = {
 }
 
 type EventCenter<T extends EventConfig> = {
-  /**
-   * for server-provider
-   */
-  register<N extends keyof T>(eventName: N, handlerFn: T[N]): void
   emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
   on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? Subscription<U[P]> : undefined }
 } & {
@@ -30,7 +26,7 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     })
   }) as EventCenter<T>['emit']
 
-  const specifiedOn = (eventName: string, handlerFn: AnyFn) => {
+  const subscribeOnAnEvent = (eventName: string, handlerFn: AnyFn) => {
     callbackCenter.set(eventName, (callbackCenter.get(eventName) ?? new WeakerSet()).add(handlerFn))
     const subscription = Subscription.of({
       unsubscribe() {
@@ -43,7 +39,7 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
   const on = ((subscriptionFns) =>
     map(
       subscriptionFns,
-      (handlerFn, eventName) => handlerFn && specifiedOn(String(eventName), handlerFn)
+      (handlerFn, eventName) => handlerFn && subscribeOnAnEvent(String(eventName), handlerFn)
     )) as EventCenter<T>['on']
 
   const eventCenter = new Proxy(
@@ -51,7 +47,7 @@ export function createEventCenter<T extends EventConfig>(): EventCenter<T> {
     {
       get(target, p) {
         if (target[p] !== undefined) return target[p]
-        if (String(p).startsWith('on')) return (p: string, handler: AnyFn) => specifiedOn(p, handler)
+        if (String(p).startsWith('on')) return (p: string, handler: AnyFn) => subscribeOnAnEvent(p, handler)
         return undefined
       }
     }

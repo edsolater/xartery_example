@@ -49,6 +49,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     const v = await respondRequestValue(idbObjectStore().put(value))
     return Boolean(v)
   }
+
   const putList: XDBObjectStore<T>['putList'] = (values) =>
     Promise.all(values.map((value) => put(value))).then(
       () => true,
@@ -62,6 +63,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   const clear: XDBObjectStore<T>['clear'] = () => {
     throw 'not imply yet'
   }
+  
   const onChange: XDBObjectStore<T>['onChange'] = (fn) => {
     const transaction = idbTransaction()
     transaction.addEventListener('complete', fn)

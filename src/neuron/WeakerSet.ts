@@ -19,7 +19,7 @@ const derefWrapperRefIfNeeded = <T>(v: T) => (v instanceof WeakRef ? v.deref() :
  * @todo test it!!!
  */
 export class WeakerSet<T> extends Set<T> {
-  private innerStoreSet: Set<T | WeakRef<T & object>>
+  private _innerValues: Set<T | WeakRef<T & object>>
 
   private cbCenter = {
     onAddNewItem: [] as ((item: T) => void)[]
@@ -27,7 +27,7 @@ export class WeakerSet<T> extends Set<T> {
 
   constructor(iterable?: Iterable<T> | null) {
     super(iterable)
-    this.innerStoreSet = new Set()
+    this._innerValues = new Set()
     if (iterable) {
       for (const item of iterable) {
         this.add(item)
@@ -36,14 +36,14 @@ export class WeakerSet<T> extends Set<T> {
   }
 
   override add(item: T): this {
-    this.innerStoreSet.add(createWrapperRefIfNeeded(item))
+    this._innerValues.add(createWrapperRefIfNeeded(item))
     this.invokeAddNewItemCallbacks(item)
     return this
   }
 
   private getRealSet(): Set<T> {
     return new Set(
-      [...this.innerStoreSet.values()].map((item) => derefWrapperRefIfNeeded(item)).filter((i) => i !== undefined)
+      [...this._innerValues.values()].map((item) => derefWrapperRefIfNeeded(item)).filter((i) => i !== undefined)
     )
   }
 
@@ -72,7 +72,7 @@ export class WeakerSet<T> extends Set<T> {
   /** return a new instance  */
   clone(): WeakerSet<T> {
     const newItem = new WeakerSet<T>()
-    newItem.innerStoreSet = new Set(this.innerStoreSet)
+    newItem._innerValues = new Set(this._innerValues)
     newItem.cbCenter = { ...map(this.cbCenter, (cbs) => [...cbs]) }
     return newItem
   }
@@ -82,11 +82,11 @@ export class WeakerSet<T> extends Set<T> {
   }
 
   override delete(item: T): boolean {
-    return this.innerStoreSet.delete(createWrapperRefIfNeeded(item))
+    return this._innerValues.delete(createWrapperRefIfNeeded(item))
   }
 
   override clear(): void {
-    return this.innerStoreSet.clear()
+    return this._innerValues.clear()
   }
 
   override has(item: T): boolean {

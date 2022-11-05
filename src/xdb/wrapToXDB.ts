@@ -46,10 +46,13 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
       })
     })
 
-  const put: XDBObjectStore<T>['put'] = (value) => {
-    console.log('put value: ', value)
-    const actionRequest = idbObjectStore().put(value)
-    return respondRequestValue(actionRequest).then((v) => Boolean(v))
+  const put: XDBObjectStore<T>['put'] = async (value) => {
+    const transaction = idbTransaction()
+    const actionRequest = transaction.objectStore(name).put(value)
+    transaction.addEventListener('complete', () => {
+      eventCenter.emit('change')
+    })
+    return Boolean(await respondRequestValue(actionRequest))
   }
 
   const putList: XDBObjectStore<T>['putList'] = (values) =>
@@ -73,11 +76,11 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   // }
 
   const eventCenter = EventCenter<{ change: () => void }>({
-    whenListenChangeInitly({ emit }) {
-      const transaction = idbTransaction()
-      transaction.addEventListener('complete', () => {
-        emit('change', [])
-      })
+    changeInitly({ emit }) {
+      // const transaction = idbTransaction()
+      // transaction.addEventListener('complete', () => {
+      //   emit('change')
+      // })
     }
   })
 

@@ -1,4 +1,4 @@
-import { AnyFn, capitalize, map } from '@edsolater/fnkit'
+import { AnyFn, capitalize, map, uncapitalize } from '@edsolater/fnkit'
 import { WeakerSet } from '../neuron/WeakerSet'
 import { Subscription } from './Subscription'
 
@@ -6,8 +6,16 @@ type EventConfig = {
   [eventName: string]: AnyFn
 }
 
+let eventCenterIdCounter = 1
+function generateEventCenterId() {
+  return eventCenterIdCounter++
+}
+
 export type EventCenter<T extends EventConfig> = {
-  emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
+  emit<N extends keyof T>(
+    eventName: N,
+    parameters?: [] extends Parameters<T[N]> ? [] | undefined : Parameters<T[N]>
+  ): void
   on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? void : void }
 } & {
   [P in keyof T as `on${Capitalize<P & string>}`]: (subscriptionFn: (...params: Parameters<T[P]>) => void) => void
@@ -32,53 +40,55 @@ export type EventCenter<T extends EventConfig> = {
  */
 // 💡 observable should be the core of js model. just like event target is the core of DOM
 export function EventCenter<T extends EventConfig>(
-  whenEmit?: {
-    [P in keyof T as `whenListen${Capitalize<P & string>}`]?: (utils: {
+  whenAttach?: {
+    [P in keyof T as `${P & string}`]?: (utils: {
       fn: (...params: Parameters<T[P]>) => void
       emit: EventCenter<T>['emit']
     }) => void
   } & {
-    [P in keyof T as `whenListen${Capitalize<P & string>}Initly`]?: (utils: {
+    [P in keyof T as `${P & string}Initly`]?: (utils: {
       fn: (...params: Parameters<T[P]>) => void
       emit: EventCenter<T>['emit']
     }) => void
   }
 ): EventCenter<T> {
+  const _eventCenterId = generateEventCenterId()
   const storedCallbackStore = new Map<keyof T, WeakerSet<AnyFn>>()
 
   const emit = ((eventName, paramters) => {
     const handlerFns = storedCallbackStore.get(eventName)
     handlerFns?.forEach((fn) => {
-      fn.call(undefined, paramters)
+      fn.apply(undefined, paramters ?? [])
     })
   }) as EventCenter<T>['emit']
 
-  const singlelyOn = (eventName: string, fn: AnyFn) => {
-    storedCallbackStore.set(eventName, (storedCallbackStore.get(eventName) ?? new WeakerSet()).add(fn))
-    whenEmit?.[`whenListen${capitalize(eventName)}`]?.({ fn, emit })
-    if (!storedCallbackStore.has(eventName)) whenEmit?.[`whenListen${capitalize(eventName)}Initly`]?.({ fn, emit })
+  const singlyOn = (eventName: string, fn: AnyFn) => {
+    const callbackList = storedCallbackStore.get(eventName) ?? new WeakerSet()
+    callbackList.add(fn) //NUG:  <-- add failed??
+    storedCallbackStore.set(eventName, callbackList)
 
-    const subscription = Subscription({
+    whenAttach?.[eventName]?.({ fn, emit })
+    if (!storedCallbackStore.has(eventName)) whenAttach?.[`${eventName}Initly`]?.({ fn, emit })
+
+    return Subscription({
       onUnsubscribe() {
         storedCallbackStore.get(eventName)?.delete(fn)
       }
     })
-    subscription.unsubscribe()
-    return subscription
   }
 
   const on = ((subscriptionFns) =>
     map(
       subscriptionFns,
-      (handlerFn, eventName) => handlerFn && singlelyOn(String(eventName), handlerFn)
+      (handlerFn, eventName) => handlerFn && singlyOn(String(eventName), handlerFn)
     )) as EventCenter<T>['on']
 
   const eventCenter = new Proxy(
-    { on, emit },
+    { on, emit, _eventCenterId },
     {
       get(target, p) {
         if (target[p] !== undefined) return target[p]
-        if (String(p).startsWith('on')) return (p: string, handler: AnyFn) => singlelyOn(p, handler)
+        if (String(p).startsWith('on')) return (fn: AnyFn) => singlyOn(uncapitalize(String(p).slice(2)), fn)
         return undefined
       }
     }

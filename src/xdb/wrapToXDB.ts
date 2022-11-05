@@ -2,7 +2,14 @@ import { AnyFn } from '@edsolater/fnkit'
 import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { observablize, respondRequestValue } from './tools'
-import { XDBDatabase, XDBIndex, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
+import {
+  XDBDatabase,
+  XDBIndex,
+  XDBObjectStore,
+  XDBObjectStoreEventConfigs,
+  XDBRecordTemplate,
+  XDBTemplate
+} from './type'
 
 export function wrapToXDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
   const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode = 'readwrite' }) =>
@@ -46,22 +53,22 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
       })
     })
 
-  const put: XDBObjectStore<T>['put'] = async (value) => {
+  const set: XDBObjectStore<T>['set'] = async (value) => {
     const transaction = idbTransaction()
     const actionRequest = transaction.objectStore(name).put(value)
     transaction.addEventListener('complete', () => {
-      eventCenter.emit('change')
+      eventCenter.emit('change', [{ objectStore, xdb }])
     })
     return Boolean(await respondRequestValue(actionRequest))
   }
 
-  const putList: XDBObjectStore<T>['putList'] = (values) =>
-    Promise.all(values.map((value) => put(value))).then(
+  const setItems: XDBObjectStore<T>['setItems'] = (values) =>
+    Promise.all(values.map((value) => set(value))).then(
       () => true,
       () => false
     )
 
-  const deleteFn: XDBObjectStore<T>['delete'] = () => {
+  const deleteItem: XDBObjectStore<T>['delete'] = () => {
     throw 'not imply yet'
   }
 
@@ -75,7 +82,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   //   return objectStore
   // }
 
-  const eventCenter = EventCenter<{ change: () => void }>({
+  const eventCenter = EventCenter<XDBObjectStoreEventConfigs<T>>({
     changeInitly({ emit }) {
       // const transaction = idbTransaction()
       // transaction.addEventListener('complete', () => {
@@ -115,10 +122,10 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
 
       getAll,
       get,
-      put,
-      putList,
+      set,
+      setItems,
 
-      delete: deleteFn,
+      delete: deleteItem,
       clear
     },
     eventCenter

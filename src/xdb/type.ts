@@ -12,6 +12,13 @@ export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
   getObjectStore(opts: XDBObjectStoreOptions): XDBObjectStore<Valueof<S>[number]>
 }
 
+export type XDBObjectStoreEventConfigs<T extends XDBRecordTemplate> = {
+  change: (utils: {
+    objectStore: XDBObjectStore<T>
+    xdb: XDBDatabase
+  }) => void
+}
+
 export type XDBObjectStore<T extends XDBRecordTemplate> = {
   _original: IDBObjectStore
   transaction: IDBObjectStore['transaction']
@@ -30,13 +37,13 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   // mutate data
   getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
   get(key: SKeyof<T>): Promise<T>
-  put(value: T): Promise<boolean>
-  putList(values: T[]): Promise<boolean>
+  set(value: T): Promise<boolean>
+  setItems(values: T[]): Promise<boolean>
 
   delete(key: SKeyof<T>): Promise<boolean>
   clear(): Promise<boolean>
   /** @todo more operate methods */
-} & EventCenter<{ change: () => void }>
+} & EventCenter<XDBObjectStoreEventConfigs<T>>
 
 export type XDBIndex<T> = {
   _original: IDBIndex

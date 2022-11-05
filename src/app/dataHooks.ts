@@ -20,9 +20,11 @@ export const useXDB = () => {
       }
     })
     objectStoreRef.current = objectStore
-    objectStore.onChange(() => {
-      console.log('idb value changed')
+
+    objectStore.onChange(async ({ objectStore }) => {
+      setList(await objectStore.getAll())
     })
+
     setList(await objectStore.getAll())
   }, [])
 
@@ -30,7 +32,7 @@ export const useXDB = () => {
   const insertAnNewItem = useEvent(() => {
     const newItem = { title: 'test', year: count.current } as AlbumItem
     count.current += 1
-    objectStoreRef.current?.put(newItem)
+    objectStoreRef.current?.set(newItem)
   })
   return { list, insertAnNewItem }
 }

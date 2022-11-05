@@ -58,7 +58,7 @@ export async function getXDBObjectStore<T extends XDBRecordTemplate = XDBRecordT
 
   // init data
   if (shouldHaveInit && initRecords) {
-    objectStore.putList(initRecords)
+    objectStore.setItems(initRecords)
   }
 
   return objectStore

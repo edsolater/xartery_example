@@ -14,11 +14,13 @@ function generateEventCenterId() {
 export type EventCenter<T extends EventConfig> = {
   emit<N extends keyof T>(
     eventName: N,
-    parameters?: [] extends Parameters<T[N]> ? [] | undefined : Parameters<T[N]>
+    parameters: [] extends Parameters<T[N]> ? [] | undefined : Parameters<T[N]>
   ): void
-  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: U[P] extends {} ? void : void }
+  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: Subscription<U[P]> }
 } & {
-  [P in keyof T as `on${Capitalize<P & string>}`]: (subscriptionFn: (...params: Parameters<T[P]>) => void) => void
+  [P in keyof T as `on${Capitalize<P & string>}`]: (
+    subscriptionFn: (...params: Parameters<T[P]>) => void
+  ) => Subscription<(...params: Parameters<T[P]>) => void>
 }
 
 /**

@@ -4,7 +4,7 @@ import { getXDBObjectStore } from '../xdb'
 import { XDBObjectStore } from '../xdb/type'
 import { AlbumItem, initData } from './dataShape'
 
-export const useXDB = () => {
+export const useXDBList = () => {
   const [list, setList] = useState<AlbumItem[]>([])
   const objectStoreRef = useRef<XDBObjectStore<AlbumItem>>()
 

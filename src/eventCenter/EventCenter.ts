@@ -11,15 +11,17 @@ function generateEventCenterId() {
   return eventCenterIdCounter++
 }
 
+export type EventCenterOptions = {
+  // TODO currently a placeholder. for don't know what to write
+}
+
 export type EventCenter<T extends EventConfig> = {
-  emit<N extends keyof T>(
-    eventName: N,
-    parameters: [] extends Parameters<T[N]> ? [] | undefined : Parameters<T[N]>
-  ): void
-  on<U extends Partial<T>>(subscriptionFns: U): { [P in keyof U]: Subscription<U[P]> }
+  emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
+  on<U extends Partial<T>>(subscriptionFns: U, options?: EventCenterOptions): { [P in keyof U]: Subscription<U[P]> }
 } & {
   [P in keyof T as `on${Capitalize<P & string>}`]: (
-    subscriptionFn: (...params: Parameters<T[P]>) => void
+    subscriptionFn: (...params: Parameters<T[P]>) => void,
+    options?: EventCenterOptions
   ) => Subscription<(...params: Parameters<T[P]>) => void>
 }
 
@@ -56,21 +58,33 @@ export function EventCenter<T extends EventConfig>(
 ): EventCenter<T> {
   const _eventCenterId = generateEventCenterId()
   const storedCallbackStore = new Map<keyof T, WeakerSet<AnyFn>>()
+  type CallbackParam = any[]
+  const emitedValueCache = new Map<keyof T, WeakerSet<CallbackParam>>()
 
   const emit = ((eventName, paramters) => {
     const handlerFns = storedCallbackStore.get(eventName)
+
     handlerFns?.forEach((fn) => {
       fn.apply(undefined, paramters ?? [])
     })
+    emitedValueCache.set(eventName, (emitedValueCache.get(eventName) ?? new WeakerSet()).add(paramters))
   }) as EventCenter<T>['emit']
 
-  const singlyOn = (eventName: string, fn: AnyFn) => {
+  const singlyOn = (eventName: string, fn: AnyFn, options?: EventCenterOptions) => {
+    // TODO currently a placeholder. for don't know what to write
     const callbackList = storedCallbackStore.get(eventName) ?? new WeakerSet()
     callbackList.add(fn) //NUG:  <-- add failed??
     storedCallbackStore.set(eventName, callbackList)
 
+    // handle `whenAttached` side-effect
     whenAttach?.[eventName]?.({ fn, emit })
     if (!storedCallbackStore.has(eventName)) whenAttach?.[`${eventName}Initly`]?.({ fn, emit })
+
+    // initly invoke prev emitedValues
+    const cachedValues = emitedValueCache.get(eventName)
+    cachedValues?.forEach((prevParamters) => {
+      fn.apply(undefined, prevParamters)
+    })
 
     return Subscription({
       onUnsubscribe() {
@@ -79,10 +93,10 @@ export function EventCenter<T extends EventConfig>(
     })
   }
 
-  const on = ((subscriptionFns) =>
+  const on = ((subscriptionFns, options) =>
     map(
       subscriptionFns,
-      (handlerFn, eventName) => handlerFn && singlyOn(String(eventName), handlerFn)
+      (handlerFn, eventName) => handlerFn && singlyOn(String(eventName), handlerFn, options)
     )) as EventCenter<T>['on']
 
   const eventCenter = new Proxy(
@@ -90,7 +104,8 @@ export function EventCenter<T extends EventConfig>(
     {
       get(target, p) {
         if (target[p] !== undefined) return target[p]
-        if (String(p).startsWith('on')) return (fn: AnyFn) => singlyOn(uncapitalize(String(p).slice(2)), fn)
+        if (String(p).startsWith('on'))
+          return (fn: AnyFn, options?: EventCenterOptions) => singlyOn(uncapitalize(String(p).slice(2)), fn, options)
         return undefined
       }
     }

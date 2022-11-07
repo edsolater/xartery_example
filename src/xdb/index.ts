@@ -17,7 +17,7 @@ function getXDB<S extends XDBTemplate = XDBTemplate>(params: XDBOptions): Promis
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', () => {
       const originalIDB = originalRequest.result
-      const xdb = wrapToXDB(originalIDB)
+      const xdb = wrapToXDB({ idb: originalIDB, request: originalRequest })
       resolve(xdb)
     })
     originalRequest.addEventListener('error', (ev) => reject(ev))

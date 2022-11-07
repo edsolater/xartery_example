@@ -17,6 +17,10 @@ export type XDBObjectStoreEventConfigs<T extends XDBRecordTemplate> = {
     objectStore: XDBObjectStore<T>
     xdb: XDBDatabase
   }) => void
+  init: (utils: {
+    objectStore: XDBObjectStore<T>
+    xdb: XDBDatabase
+  }) => void
 }
 
 export type XDBObjectStore<T extends XDBRecordTemplate> = {

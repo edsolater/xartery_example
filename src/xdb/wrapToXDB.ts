@@ -11,22 +11,44 @@ import {
   XDBTemplate
 } from './type'
 
-export function wrapToXDB<S extends XDBTemplate>(idb: IDBDatabase): XDBDatabase<S> {
+export function wrapToXDB<S extends XDBTemplate>({
+  idb,
+  request
+}: {
+  idb: IDBDatabase
+  request: IDBOpenDBRequest
+}): XDBDatabase<S> {
   const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode = 'readwrite' }) =>
-    wrapToXDBObjectStore({ idb, name, transactionMode })
+    wrapToXDBObjectStore({ idb, idbOpenRequest: request, name, transactionMode })
   return { _original: idb, getObjectStore }
 }
 
 export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
   idb,
+  idbOpenRequest,
   name,
   transactionMode = 'readwrite'
 }: {
   idb: IDBDatabase
+  idbOpenRequest: IDBOpenDBRequest
   name: string
   transactionMode?: IDBTransactionMode
 }): XDBObjectStore<T> {
-  const xdb = wrapToXDB(idb)
+  const xdb = wrapToXDB({ idb, request: idbOpenRequest })
+  console.log('idbOpenRequest: ', idbOpenRequest)
+  if (idbOpenRequest.readyState === 'done') {
+    setTimeout(() => {
+      console.log('init')
+      eventCenter.emit('init', [{ objectStore, xdb }])
+    }, 0)
+  } else {
+    idbOpenRequest.addEventListener('success', () => {
+      console.log('init2')
+      eventCenter.emit('init', [{ objectStore, xdb }])
+    })
+  }
+  idbOpenRequest.readyState === 'done'
+
   const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
   const idbObjectStore = () => idbTransaction().objectStore(name)
 

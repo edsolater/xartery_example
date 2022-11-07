@@ -1,6 +1,5 @@
-import { isFunction, MayPromise } from '@edsolater/fnkit'
-import { mergeFunction, useEvent } from '@edsolater/hookit'
-import { useEffect, useRef, useState } from 'react'
+import { mergeFunction, useAsyncEffect, useEvent } from '@edsolater/hookit'
+import { useRef, useState } from 'react'
 import { getXDBObjectStore } from '../xdb'
 import { XDBObjectStore } from '../xdb/type'
 import { AlbumItem, initData } from './dataShape'
@@ -9,7 +8,7 @@ export const useXDB = () => {
   const [list, setList] = useState<AlbumItem[]>([])
   const objectStoreRef = useRef<XDBObjectStore<AlbumItem>>()
 
-  // subscribe to xdb's onChange
+  //#region ------------------- subscribe to xdb's onChange -------------------
   useAsyncEffect(async () => {
     const objectStore = await getXDBObjectStore<AlbumItem>({
       dbOptions: {
@@ -27,7 +26,7 @@ export const useXDB = () => {
     const subscription = objectStore.onInit(async ({ objectStore }) => {
       const list = await objectStore.getAll()
       setList(list)
-    })
+    }, {})
 
     const subscription2 = objectStore.onChange(async ({ objectStore }) => {
       const list = await objectStore.getAll() // TODO: getAll should be cached, or it will cause too much
@@ -36,24 +35,16 @@ export const useXDB = () => {
 
     return mergeFunction(subscription.unsubscribe, subscription2.unsubscribe)
   }, [])
+  //#endregion
 
-  // inser Data
+  //#region ------------------- ioninser Data -------------------
   const count = useRef(1)
   const insertAnNewItem = useEvent(() => {
     const newItem = { title: 'test', year: count.current } as AlbumItem
     count.current += 1
     objectStoreRef.current?.set(newItem)
   })
-  
-  return { list, insertAnNewItem }
-}
+  //#endregion
 
-function useAsyncEffect<CleanFn>(asyncEffect: () => MayPromise<CleanFn>, dependenceList?: any[]): void {
-  const cleanFunction = useRef<CleanFn>()
-  useEffect(() => {
-    Promise.resolve(asyncEffect()).then((cleanFn) => (cleanFunction.current = cleanFn))
-    return () => {
-      if (isFunction(cleanFunction.current)) cleanFunction.current()
-    }
-  }, dependenceList)
+  return { list, insertAnNewItem }
 }

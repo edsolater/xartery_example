@@ -1,5 +1,6 @@
-import { useAsyncEffect, useEvent } from '@edsolater/hookit'
-import { useRef, useState } from 'react'
+import { isFunction, MayPromise } from '@edsolater/fnkit'
+import { useEvent } from '@edsolater/hookit'
+import { useEffect, useRef, useState } from 'react'
 import { getXDBObjectStore } from '../xdb'
 import { XDBObjectStore } from '../xdb/type'
 import { AlbumItem, initData } from './dataShape'
@@ -21,11 +22,11 @@ export const useXDB = () => {
     })
     objectStoreRef.current = objectStore
 
-    objectStore.onChange(async ({ objectStore }) => {
-      setList(await objectStore.getAll())
+    const subscription = objectStore.onChange(async ({ objectStore }) => {
+      const list = await objectStore.getAll()
+      setList(list)
     })
-
-    setList(await objectStore.getAll())
+    return subscription.unsubscribe
   }, [])
 
   const count = useRef(1)
@@ -36,4 +37,13 @@ export const useXDB = () => {
   })
   return { list, insertAnNewItem }
 }
-  
+
+function useAsyncEffect<CleanFn>(asyncEffect: () => MayPromise<CleanFn>, dependenceList?: any[]): void {
+  const cleanFunction = useRef<CleanFn>()
+  useEffect(() => {
+    Promise.resolve(asyncEffect()).then((cleanFn) => (cleanFunction.current = cleanFn))
+    return () => {
+      if (isFunction(cleanFunction.current)) cleanFunction.current()
+    }
+  }, dependenceList)
+}

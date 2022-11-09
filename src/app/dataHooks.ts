@@ -2,22 +2,22 @@ import { mergeFunction, useAsyncEffect, useEvent } from '@edsolater/hookit'
 import { useRef, useState } from 'react'
 import { getXDBObjectStore } from '../xdb'
 import { XDBObjectStore } from '../xdb/type'
-import { AlbumItem, initData } from './dataShape'
+import { TodoListItem, initData } from './dataShape'
 
 export const useXDBList = () => {
-  const [list, setList] = useState<AlbumItem[]>([])
-  const objectStoreRef = useRef<XDBObjectStore<AlbumItem>>()
+  const [todoList, setList] = useState<TodoListItem[]>([])
+  const objectStoreRef = useRef<XDBObjectStore<TodoListItem>>()
 
   //#region ------------------- subscribe to xdb's onChange -------------------
   useAsyncEffect(async () => {
-    const objectStore = await getXDBObjectStore<AlbumItem>({
+    const objectStore = await getXDBObjectStore<TodoListItem>({
       dbOptions: {
         name: 'my-database'
       },
       objectStoreInitOptions: {
         name: 'album',
         keyPath: 'title',
-        indexes: [{ property: 'year' }],
+        indexes: [{ property: 'createAt' }],
         initRecords: initData
       }
     })
@@ -38,13 +38,11 @@ export const useXDBList = () => {
   //#endregion
 
   //#region ------------------- ioninser Data -------------------
-  const count = useRef(1)
-  const insertAnNewItem = useEvent(() => {
-    const newItem = { title: 'test', year: count.current } as AlbumItem
-    count.current += 1
+  const insertTodoItem = (info: { inputText: string }) => {
+    const newItem = { title: info.inputText, createAt: new Date() } as TodoListItem
     objectStoreRef.current?.set(newItem)
-  })
+  }
   //#endregion
 
-  return { list, insertAnNewItem }
+  return { todoList, insertTodoItem }
 }

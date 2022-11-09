@@ -1,4 +1,3 @@
-import { AnyFn } from '@edsolater/fnkit'
 import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { observablize, respondRequestValue } from './tools'

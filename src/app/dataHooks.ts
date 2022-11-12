@@ -38,8 +38,8 @@ export const useXDBList = () => {
   //#endregion
 
   //#region ------------------- ioninser Data -------------------
-  const insertTodoItem = (info: { inputText: string }) => {
-    const newItem = { title: info.inputText, createAt: new Date() } as TodoListItem
+  const insertTodoItem = (info: { todoTitle: string }) => {
+    const newItem = { title: info.todoTitle, createAt: new Date() } as TodoListItem
     objectStoreRef.current?.set(newItem)
   }
   //#endregion

@@ -1,4 +1,4 @@
-import { map } from '@edsolater/fnkit'
+import { formatDate, map } from '@edsolater/fnkit'
 
 export function ItemsDisplayer<T extends Record<string, any>>({
   items,
@@ -12,7 +12,7 @@ export function ItemsDisplayer<T extends Record<string, any>>({
   const itemProperties = Object.keys(items[0] ?? {})
   const typeMap = {
     table: () => (
-      <table style={{ border: '1px solid', borderCollapse: 'collapse' }}>
+      <table className={ItemsDisplayer.name} style={{ border: '1px solid', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
             {map(itemProperties, (p) => (
@@ -24,7 +24,9 @@ export function ItemsDisplayer<T extends Record<string, any>>({
           {map(items, (i, idx) => (
             <tr key={getItemKey?.(i) ?? i.id ?? idx}>
               {map(Object.entries(i), ([key, value]) => (
-                <td key={key}>{value}</td>
+                <td key={key} style={{ paddingInline: 8, paddingBlock: 4 }}>
+                  {stringify(value)}
+                </td>
               ))}
             </tr>
           ))}
@@ -33,4 +35,9 @@ export function ItemsDisplayer<T extends Record<string, any>>({
     )
   }
   return typeMap[layoutType]()
+}
+
+function stringify(value: any): string {
+  if (value instanceof Date) return formatDate(value, 'YYYY-MM-DD HH:mm:ss')
+  return String(value)
 }

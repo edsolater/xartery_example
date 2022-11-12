@@ -1,33 +1,42 @@
-import { Button, Div, Row, injectGlobalResetStyle, Input, Grid } from '@edsolater/uikit'
-import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
+import { Button, Div, Text, Row, injectGlobalResetStyle, Input, Grid } from '@edsolater/uikit'
+import { mergeFunction, useIsomorphicLayoutEffect } from '@edsolater/hookit'
 import { useConsoleLog } from '../hookit/useConsoleLog'
 import { useXDBList } from './dataHooks'
 import { ItemsDisplayer } from './ItemsDisplayer'
+import { useState } from 'react'
 
+// should be a `<TodoList>` component
 function App() {
   useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
 
   const { todoList, insertTodoItem } = useXDBList()
   useConsoleLog({ data: { todoList }, disabled: true })
+  const [newTodoTitle, setNewTodoTitle] = useState<string>()
+
+  const insertNewTodoItem = () => {
+    if (newTodoTitle) {
+      insertTodoItem({ todoTitle: newTodoTitle })
+    }
+  }
+
+  const clearTodoTitleInput = () => setNewTodoTitle(undefined)
+
+  const uploadNewTodoItem = mergeFunction(insertNewTodoItem, clearTodoTitleInput)
+
   return (
-    <div className='App'>
-      <Grid>
+    <Div className={App.name}>
+      <Grid icss={{ justifyItems: 'center', gap: 8, padding: 16 }}>
         <Row icss={{ alignItems: 'center', gap: 4 }}>
-          <Div icss={{ fontSize: 24 }}>new todo:</Div>
-          <Input onEnter={}/>
-          <Button onClick={() => insertTodoItem}>Insert Item</Button>
+          <Text icss={{ fontSize: 24 }}>new todo:</Text>
+          <Input value={newTodoTitle} onUserInput={(t) => setNewTodoTitle(t)} onEnter={uploadNewTodoItem} />
+          <Button size='sm' onClick={uploadNewTodoItem}>
+            Insert Item
+          </Button>
         </Row>
 
-        <Div>
-          {/* <Div icss={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 32 }}>
-          {list.map((i) => (
-            <ObjectIllustrator item={i} />
-            ))}
-          </Div> */}
-          <ItemsDisplayer items={todoList} getItemKey={(i) => i.title} />
-        </Div>
+        <ItemsDisplayer items={todoList} getItemKey={(i) => i.title} />
       </Grid>
-    </div>
+    </Div>
   )
 }
 

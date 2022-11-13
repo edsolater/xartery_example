@@ -2,9 +2,9 @@ lockfileVersion: 5.4
 
 specifiers:
   '@babel/core': ^7.20.2
-  '@edsolater/fnkit': ^0.1.9
+  '@edsolater/fnkit': ^0.1.10
   '@edsolater/hookit': ^0.1.11
-  '@edsolater/uikit': ^0.1.11
+  '@edsolater/uikit': ^0.1.12
   '@types/react': ^18.0.25
   '@types/react-dom': ^18.0.8
   '@vitejs/plugin-react': ^2.2.0
@@ -16,9 +16,9 @@ specifiers:
 
 dependencies:
   '@babel/core': 7.20.2
-  '@edsolater/fnkit': 0.1.9
-  '@edsolater/hookit': 0.1.11_lmjumkn2u5upfe3iinjglh5g5y
-  '@edsolater/uikit': 0.1.11_a2bhdfowsschiy6o7idtn644oa
+  '@edsolater/fnkit': 0.1.10
+  '@edsolater/hookit': 0.1.11_ntb6fqh42gqqrxtm7j3ckupuz4
+  '@edsolater/uikit': 0.1.12_3sbkiyydmaqmwt7r4l4corpkfa
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   rxjs: 7.5.7
@@ -282,22 +282,22 @@ packages:
       '@babel/helper-validator-identifier': 7.19.1
       to-fast-properties: 2.0.0
 
-  /@edsolater/fnkit/0.1.9:
-    resolution: {integrity: sha512-SxS0LNXQedmY3TWlqW0bzVKRWeVKeNGB2sRAEzFZZp/OvtsWVs07zh+oQBobGoa2HPywme1HPqdn+2vEQMWIgQ==}
+  /@edsolater/fnkit/0.1.10:
+    resolution: {integrity: sha512-VFzjuwNU78//YJMAqqITeSiYgYC4SYKycIlAXjg8Ius13BvtBCwwB6AM+joYRTHZSDutuVmOav4F+TMHpRxDxw==}
     dev: false
 
-  /@edsolater/hookit/0.1.11_lmjumkn2u5upfe3iinjglh5g5y:
+  /@edsolater/hookit/0.1.11_ntb6fqh42gqqrxtm7j3ckupuz4:
     resolution: {integrity: sha512-7pTJAESc2TnUQacbDhe4RoJxqqeUY3CyFMUSFnaLLi3wDDPerYZmSBxXJVXuY4Ecb8U02ZgujD+3fBuogTKDIg==}
     peerDependencies:
       '@edsolater/fnkit': '>=0.0.4'
       react: '>=18.0.0'
     dependencies:
-      '@edsolater/fnkit': 0.1.9
+      '@edsolater/fnkit': 0.1.10
       react: 18.2.0
     dev: false
 
-  /@edsolater/uikit/0.1.11_a2bhdfowsschiy6o7idtn644oa:
-    resolution: {integrity: sha512-GmkCf59EzpSDGxHffYwsrtFMJG/zIb2YS6D1PvViHQZTrKrPnfIy4X9CtF4LjwxaekM1nSMirLSkUKdTqFAH9w==}
+  /@edsolater/uikit/0.1.12_3sbkiyydmaqmwt7r4l4corpkfa:
+    resolution: {integrity: sha512-jC0kWThL29U4Kdzj960MAXxLLyp6LBXlZxt/vQOc0KPRwzJf8QToYjZY1Be164KvR+QZGEvQkUlgVL2QJH3Cnw==}
     peerDependencies:
       '@babel/core': '>7.0.0'
       '@edsolater/fnkit': '*'
@@ -306,22 +306,23 @@ packages:
       react-dom: '>18.0.0'
     dependencies:
       '@babel/core': 7.20.2
-      '@edsolater/fnkit': 0.1.9
-      '@edsolater/hookit': 0.1.11_lmjumkn2u5upfe3iinjglh5g5y
-      '@edsolater/xstore': 0.1.9_lmjumkn2u5upfe3iinjglh5g5y
+      '@edsolater/fnkit': 0.1.10
+      '@edsolater/hookit': 0.1.11_ntb6fqh42gqqrxtm7j3ckupuz4
+      '@edsolater/xstore': 0.1.9_ntb6fqh42gqqrxtm7j3ckupuz4
       '@emotion/css': 11.10.5_@babel+core@7.20.2
       '@headlessui/react': 1.7.4_biqbaboplfbrettd7655fr4n2y
+      immer: 9.0.16
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
-  /@edsolater/xstore/0.1.9_lmjumkn2u5upfe3iinjglh5g5y:
+  /@edsolater/xstore/0.1.9_ntb6fqh42gqqrxtm7j3ckupuz4:
     resolution: {integrity: sha512-tCiIejuEclFuFRDYVpSQWrAYtgNAyuuEZDpeIzQdUvcuqJfDgSyRAOvwrXUCzb5wopMhHGvPWsz6LnL6Imm51A==}
     peerDependencies:
       '@edsolater/fnkit': '>=0.0.5'
       react: '>=18.0.0'
     dependencies:
-      '@edsolater/fnkit': 0.1.9
+      '@edsolater/fnkit': 0.1.10
       react: 18.2.0
     dev: false
 
@@ -856,6 +857,10 @@ packages:
     engines: {node: '>= 0.4.0'}
     dependencies:
       function-bind: 1.1.1
+
+  /immer/9.0.16:
+    resolution: {integrity: sha512-qenGE7CstVm1NrHQbMh8YaSzTZTFNP3zPqr3YU0S0UY441j4bJTg4A2Hh5KAhwgaiU6ZZ1Ar6y/2f4TblnMReQ==}
+    dev: false
 
   /import-fresh/3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}

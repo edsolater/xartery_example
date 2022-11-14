@@ -2,7 +2,7 @@ import { Button, Div, Text, Row, injectGlobalResetStyle, Input, Grid } from '@ed
 import { mergeFunction, useIsomorphicLayoutEffect } from '@edsolater/hookit'
 import { useConsoleLog } from '../hookit/useConsoleLog'
 import { useXDBList } from './dataHooks'
-import { ItemsDisplayer } from './ItemsDisplayer'
+import { _ItemsListBasic, ItemsListDisplayer } from './ItemsDisplayer'
 import { useState } from 'react'
 
 // should be a `<TodoList>` component
@@ -34,7 +34,7 @@ function App() {
           </Button>
         </Row>
 
-        <ItemsDisplayer items={todoList} getItemKey={(i) => i.title} />
+        <ItemsListDisplayer items={todoList} getItemKey={({ item: i }) => i.title} />
       </Grid>
     </Div>
   )

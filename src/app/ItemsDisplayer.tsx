@@ -25,10 +25,10 @@ export const _ItemsListBasic = componentkit(
     }: _ItemsListBasicProps<T>) =>
       (
         <ComponentRoot icss={{ border: '1px solid', padding: 4 }}>
-          <Group mergeProps={propOfListHeader} name='list-header'>
+          <Group shallowDivProps={propOfListHeader} name='list-header'>
             <Div>{renderHeader({ items, firstItem: items.at(0) })}</Div>
           </Group>
-          <Group mergeProps={propOfListItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
+          <Group shallowDivProps={propOfListItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
             {items.map((item, idx) => (
               <Div key={getItemKey({ item, idx })}>{renderItem({ item })}</Div>
             ))}
@@ -36,6 +36,7 @@ export const _ItemsListBasic = componentkit(
         </ComponentRoot>
       )
 )
+
 type ItemsListDisplayerProps<Item extends Record<string, any>> = {
   items: _ItemsListBasicProps<Item>['items']
   layoutType?: 'table'

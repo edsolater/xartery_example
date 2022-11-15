@@ -25,7 +25,7 @@ function App() {
 
   return (
     <Div className={App.name}>
-      <Grid icss={{ justifyItems: 'center', gap: 8, padding: 16 }}>
+      <Div icss={{ display: 'grid', justifyItems: 'center', gap: 8, padding: 16 }}>
         <Row icss={{ alignItems: 'center', gap: 4 }}>
           <Text icss={{ fontSize: 24 }}>new todo:</Text>
           <Input value={newTodoTitle} onUserInput={(t) => setNewTodoTitle(t)} onEnter={uploadNewTodoItem} />
@@ -35,7 +35,7 @@ function App() {
         </Row>
 
         <ItemsListDisplayer items={todoList} getItemKey={({ item: i }) => i.title} />
-      </Grid>
+      </Div>
     </Div>
   )
 }

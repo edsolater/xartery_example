@@ -1,8 +1,8 @@
 import { formatDate } from '@edsolater/fnkit'
-import { Div, DivProps, Group } from '@edsolater/uikit'
+import { componentkit, Div, DivProps, Group } from '@edsolater/uikit'
 import { ReactNode } from 'react'
 
-type _ItemsListBasicProps<T extends Record<string, any>> = {
+type _ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
   items: T[]
   getItemKey: (info: { item: T; idx: number }) => string | number
   renderItem: (info: { item: T }) => ReactNode
@@ -12,43 +12,70 @@ type _ItemsListBasicProps<T extends Record<string, any>> = {
 }
 
 /** basic  */
-export function _ItemsListBasic<T extends Record<string, any>>({
-  items,
-  getItemKey,
-  
-  renderHeader,
-  renderItem,
-  propOfListHeader,
-  propOfListItemGroup,
-  ...divProps
-}: _ItemsListBasicProps<T> & DivProps) {
-  return (
-    <Div {...divProps} className_={_ItemsListBasic.name} icss_={{ border: '1px solid', padding: 4 }}>
-      <Group {...propOfListHeader} name='list-header'>
-        <Div>{renderHeader({ items, firstItem: items.at(0) })}</Div>
-      </Group>
-      <Group {...propOfListItemGroup} name='list-item-group' icss_={{ display: 'grid', gap: 8 }}>
-        {items.map((item, idx) => (
-          <Div key={getItemKey({ item, idx })}>{renderItem({ item })}</Div>
-        ))}
-      </Group>
-    </Div>
-  )
-}
+// export function _ItemsListBasic<T extends Record<string, any>>({
+//   items,
+//   getItemKey,
+
+//   renderHeader,
+//   renderItem,
+//   propOfListHeader,
+//   propOfListItemGroup,
+//   ...divProps
+// }: _ItemsListBasicProps<T> & DivProps) {
+//   return (
+//     <Div {...divProps} className={_ItemsListBasic.name} icss={{ border: '1px solid', padding: 4 }}>
+//       <Group {...propOfListHeader} name='list-header'>
+//         <Div>{renderHeader({ items, firstItem: items.at(0) })}</Div>
+//       </Group>
+//       <Group {...propOfListItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
+//         {items.map((item, idx) => (
+//           <Div key={getItemKey({ item, idx })}>{renderItem({ item })}</Div>
+//         ))}
+//       </Group>
+//     </Div>
+//   )
+// }
 
 /** basic  */
-export function ItemsListDisplayer<T extends Record<string, any>>({
+export const _ItemsListBasic = componentkit(
+  '_ItemsListBasic',
+  (ComponentRoot) =>
+    <T extends Record<string, any>>({
+      items,
+      getItemKey,
+
+      renderHeader,
+      renderItem,
+      propOfListHeader,
+      propOfListItemGroup
+    }: _ItemsListBasicProps<T>) =>
+      (
+        <ComponentRoot icss={{ border: '1px solid', padding: 4 }}>
+          <Group {...propOfListHeader} name='list-header'>
+            <Div>{renderHeader({ items, firstItem: items.at(0) })}</Div>
+          </Group>
+          <Group {...propOfListItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
+            {items.map((item, idx) => (
+              <Div key={getItemKey({ item, idx })}>{renderItem({ item })}</Div>
+            ))}
+          </Group>
+        </ComponentRoot>
+      )
+)
+
+/** basic  */
+export function ItemsListDisplayer<Item extends Record<string, any>>({
   items,
   layoutType = 'table',
   getItemKey,
   renderHeader,
   renderItem
 }: {
-  items: _ItemsListBasicProps<T>['items']
+  items: _ItemsListBasicProps<Item>['items']
   layoutType?: 'table'
-  getItemKey?: _ItemsListBasicProps<T>['getItemKey']
-  renderItem?: _ItemsListBasicProps<T>['renderItem']
-  renderHeader?: _ItemsListBasicProps<T>['renderHeader']
+  getItemKey?: _ItemsListBasicProps<Item>['getItemKey']
+  renderItem?: _ItemsListBasicProps<Item>['renderItem']
+  renderHeader?: _ItemsListBasicProps<Item>['renderHeader']
 }) {
   const typeMap = {
     table: () => (

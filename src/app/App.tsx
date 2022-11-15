@@ -25,16 +25,17 @@ function App() {
 
   return (
     <Div className={App.name}>
-      <Div icss={{ display: 'grid', justifyItems: 'center', gap: 8, padding: 16 }}>
+      <Div icss={{ width: 'min-content', display: 'grid', justifyItems: 'center', gap: 8, padding: 16 }}>
         <Row icss={{ alignItems: 'center', gap: 4 }}>
-          <Text icss={{ fontSize: 24 }}>new todo:</Text>
           <Input value={newTodoTitle} onUserInput={(t) => setNewTodoTitle(t)} onEnter={uploadNewTodoItem} />
           <Button size='sm' onClick={uploadNewTodoItem}>
             Insert Item
           </Button>
         </Row>
 
-        <ItemsListDisplayer items={todoList} getItemKey={({ item: i }) => i.title} />
+        {todoList.length > 0 && (
+          <ItemsListDisplayer icss={{ width: '100%' }} items={todoList} getItemKey={({ item: i }) => i.title} />
+        )}
       </Div>
     </Div>
   )

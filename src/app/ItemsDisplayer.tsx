@@ -43,7 +43,6 @@ export const _ItemsListBasic = componentkit(
     <T extends Record<string, any>>({
       items,
       getItemKey,
-
       renderHeader,
       renderItem,
       propOfListHeader,
@@ -51,10 +50,10 @@ export const _ItemsListBasic = componentkit(
     }: _ItemsListBasicProps<T>) =>
       (
         <ComponentRoot icss={{ border: '1px solid', padding: 4 }}>
-          <Group {...propOfListHeader} name='list-header'>
+          <Group mergeProps={propOfListHeader} name='list-header'>
             <Div>{renderHeader({ items, firstItem: items.at(0) })}</Div>
           </Group>
-          <Group {...propOfListItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
+          <Group mergeProps={propOfListItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
             {items.map((item, idx) => (
               <Div key={getItemKey({ item, idx })}>{renderItem({ item })}</Div>
             ))}

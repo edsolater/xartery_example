@@ -8,15 +8,19 @@ import { TodoList } from './TodoList'
 export function App() {
   useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
 
-  const { todoList, insertTodoItem } = useXDBList()
+  const { todoList, insertTodoItem, deleteTodoItem } = useXDBList()
   useConsoleLog({ data: { todoList }, disabled: true })
 
   return (
     <Div className={App.name}>
       <TodoList
         items={todoList}
-        onInsert={({ text }) => {
+        getItemKey={({ item }) => item.title}
+        onInsert={(text) => {
           insertTodoItem({ todoTitle: text })
+        }}
+        onDeleteItem={(item) => {
+          deleteTodoItem({ item })
         }}
       />
     </Div>

@@ -1,8 +1,8 @@
-import { mergeFunction, useAsyncEffect, useEvent } from '@edsolater/hookit'
+import { mergeFunction, useAsyncEffect } from '@edsolater/hookit'
 import { useRef, useState } from 'react'
 import { getXDBObjectStore } from '../xdb'
 import { XDBObjectStore } from '../xdb/type'
-import { TodoListItem, initData } from './dataShape'
+import { initData, TodoListItem } from './dataShape'
 
 export const useXDBList = () => {
   const [todoList, setList] = useState<TodoListItem[]>([])
@@ -39,10 +39,17 @@ export const useXDBList = () => {
 
   //#region ------------------- ioninser Data -------------------
   const insertTodoItem = (info: { todoTitle: string }) => {
+    if (!objectStoreRef.current) return
     const newItem = { title: info.todoTitle, createAt: new Date() } as TodoListItem
-    objectStoreRef.current?.set(newItem)
+    objectStoreRef.current.set(newItem)
+  }
+  
+  const deleteTodoItem = (info: { item: TodoListItem }) => {
+    if (!objectStoreRef.current) return
+    const keyPath = objectStoreRef.current.keyPath
+    objectStoreRef.current.delete(info.item[keyPath])
   }
   //#endregion
 
-  return { todoList, insertTodoItem }
+  return { todoList, insertTodoItem, deleteTodoItem }
 }

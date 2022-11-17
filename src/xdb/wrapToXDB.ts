@@ -38,12 +38,12 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   if (idbOpenRequest.readyState === 'done') {
     setTimeout(() => {
       console.log('init')
-      eventCenter.emit('init', [{ objectStore, xdb }])
+      eventCenter.emit('init', [{ objectStore: xobjectStore, xdb }])
     }, 0)
   } else {
     idbOpenRequest.addEventListener('success', () => {
       console.log('init2')
-      eventCenter.emit('init', [{ objectStore, xdb }])
+      eventCenter.emit('init', [{ objectStore: xobjectStore, xdb }])
     })
   }
   idbOpenRequest.readyState === 'done'
@@ -75,12 +75,14 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     })
 
   const set: XDBObjectStore<T>['set'] = async (value) => {
-    const transaction = idbTransaction()
-    const actionRequest = transaction.objectStore(name).put(value)
-    transaction.addEventListener('complete', () => {
-      eventCenter.emit('change', [{ objectStore, xdb }])
+    const objectStore = idbObjectStore()
+    objectStore.transaction.addEventListener('complete', () => {
+      eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
     })
-    return Boolean(await respondRequestValue(actionRequest))
+
+    const coreAction = () => objectStore.put(value)
+
+    return Boolean(await respondRequestValue(coreAction()))
   }
 
   const setItems: XDBObjectStore<T>['setItems'] = (values) =>
@@ -89,8 +91,15 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
       () => false
     )
 
-  const deleteItem: XDBObjectStore<T>['delete'] = () => {
-    throw 'not imply yet'
+  const deleteItem: XDBObjectStore<T>['delete'] = async (key: string) => {
+    const objectStore = idbObjectStore()
+    objectStore.transaction.addEventListener('complete', () => {
+      eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
+    })
+
+    const coreAction = () => objectStore.delete(key)
+
+    return Boolean(await respondRequestValue(coreAction()))
   }
 
   const clear: XDBObjectStore<T>['clear'] = () => {
@@ -115,7 +124,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<T> =>
     wrapToXDBIndex<T>(idbObjectStore().createIndex(name, name, opts))
 
-  const objectStore = mergeEventCenterFeature(
+  const xobjectStore = mergeEventCenterFeature(
     {
       get _original() {
         return idbObjectStore()
@@ -132,7 +141,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
         return idbObjectStore().indexNames
       },
       get keyPath() {
-        return idbObjectStore().keyPath
+        return getKeyPath()
       },
       get autoIncrement() {
         return idbObjectStore().autoIncrement
@@ -152,7 +161,11 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     eventCenter
   )
 
-  return objectStore
+  return xobjectStore
+
+  function getKeyPath() {
+    return String(idbObjectStore().keyPath)
+  }
 }
 
 export function wrapToXDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {

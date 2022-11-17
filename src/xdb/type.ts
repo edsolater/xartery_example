@@ -30,7 +30,7 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
 
   name: IDBObjectStore['name']
   indexNames: IDBObjectStore['indexNames']
-  keyPath: IDBObjectStore['keyPath']
+  keyPath: string
   autoIncrement: IDBObjectStore['autoIncrement']
 
   // NOTE: temporary do not care about objectStore's index

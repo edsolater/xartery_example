@@ -8,7 +8,7 @@ import { TodoList } from './TodoList'
 export function App() {
   useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
 
-  const { todoList, insertTodoItem, deleteTodoItem } = useXDBList()
+  const { todoList, insertTodoItem, deleteTodoItem, clear } = useXDBList()
   useConsoleLog({ data: { todoList }, disabled: true })
 
   return (
@@ -21,6 +21,9 @@ export function App() {
         }}
         onDeleteItem={(item) => {
           deleteTodoItem({ item })
+        }}
+        onClickClearBtn={() => {
+          clear()
         }}
       />
     </Div>

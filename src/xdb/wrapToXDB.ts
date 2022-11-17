@@ -34,15 +34,13 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   transactionMode?: IDBTransactionMode
 }): XDBObjectStore<T> {
   const xdb = wrapToXDB({ idb, request: idbOpenRequest })
-  console.log('idbOpenRequest: ', idbOpenRequest)
+
   if (idbOpenRequest.readyState === 'done') {
     setTimeout(() => {
-      console.log('init')
       eventCenter.emit('init', [{ objectStore: xobjectStore, xdb }])
     }, 0)
   } else {
     idbOpenRequest.addEventListener('success', () => {
-      console.log('init2')
       eventCenter.emit('init', [{ objectStore: xobjectStore, xdb }])
     })
   }
@@ -50,9 +48,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
 
   const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
   const idbObjectStore = () => idbTransaction().objectStore(name)
-
   const index: XDBObjectStore<T>['index'] = (name) => wrapToXDBIndex(idbObjectStore().index(name))
-
   const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore().get(String(key)))
 
   const getAll: XDBObjectStore<T>['getAll'] = ({ query, direction } = {}) =>
@@ -102,23 +98,24 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     return Boolean(await respondRequestValue(coreAction()))
   }
 
-  const clear: XDBObjectStore<T>['clear'] = () => {
-    throw 'not imply yet'
+  const clear: XDBObjectStore<T>['clear'] = async () => {
+    const objectStore = idbObjectStore()
+    objectStore.transaction.addEventListener('complete', () => {
+      eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
+    })
+
+    const coreAction = () => objectStore.clear()
+
+    return Boolean(await respondRequestValue(coreAction()))
   }
 
-  // const onChange: XDBObjectStore<T>['onChange'] = (fn) => {
-  //   const transaction = idbTransaction()
-  //   transaction.addEventListener('complete', fn)
-  //   return objectStore
-  // }
-
   const eventCenter = EventCenter<XDBObjectStoreEventConfigs<T>>({
-    changeInitly({ emit }) {
-      // const transaction = idbTransaction()
-      // transaction.addEventListener('complete', () => {
-      //   emit('change')
-      // })
-    }
+    // changeInitly({ emit }) {
+    // const transaction = idbTransaction()
+    // transaction.addEventListener('complete', () => {
+    //   emit('change')
+    // })
+    // }
   })
 
   const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<T> =>

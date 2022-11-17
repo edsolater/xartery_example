@@ -1,13 +1,12 @@
 import { Button, componentkit, Div, Input, Row } from '@edsolater/uikit'
 import { useState } from 'react'
-import { TodoListDisplayerProps, TodoListItemsDisplayer } from './TodoListItemsDisplayer'
+import { TodoListDisplayerProps, TodoListItemTable } from './TodoListItemTable'
 
 export type TodoListProps<T extends Record<string, any>> = {
   items: T[]
   getItemKey: TodoListDisplayerProps<T>['getItemKey']
   onInsert?: (text: string) => void
-  onDeleteItem?: (item: T) => void
-}
+} & Pick<TodoListDisplayerProps<T>, 'onDeleteItem' | 'onClickClearBtn'>
 
 export const TodoList = componentkit(
   'TodoList',
@@ -38,12 +37,7 @@ export const TodoList = componentkit(
               </Button>
             </Row>
 
-            <TodoListItemsDisplayer
-              icss={{ width: '100%' }}
-              items={props.items}
-              getItemKey={props.getItemKey}
-              onDeleteItem={props.onDeleteItem}
-            />
+            <TodoListItemTable {...props} items={props.items} getItemKey={props.getItemKey} />
           </Div>
         </ComponentRoot>
       )

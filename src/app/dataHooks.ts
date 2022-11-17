@@ -43,13 +43,17 @@ export const useXDBList = () => {
     const newItem = { title: info.todoTitle, createAt: new Date() } as TodoListItem
     objectStoreRef.current.set(newItem)
   }
-  
+
   const deleteTodoItem = (info: { item: TodoListItem }) => {
     if (!objectStoreRef.current) return
     const keyPath = objectStoreRef.current.keyPath
     objectStoreRef.current.delete(info.item[keyPath])
   }
+  const clearItems = () => {
+    if (!objectStoreRef.current) return
+    objectStoreRef.current.clear()
+  }
   //#endregion
 
-  return { todoList, insertTodoItem, deleteTodoItem }
+  return { todoList, insertTodoItem, deleteTodoItem, clear: clearItems }
 }

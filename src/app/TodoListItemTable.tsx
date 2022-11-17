@@ -1,5 +1,5 @@
 import { addDefault, formatDate } from '@edsolater/fnkit'
-import { componentkit, Div, Icon } from '@edsolater/uikit'
+import { componentkit, Div, Icon, ICSS } from '@edsolater/uikit'
 import { ItemsListBasic, ItemsListBasicProps } from './ItemsDisplayer'
 import deleteIconUrl from '/delete.svg'
 
@@ -8,15 +8,17 @@ export type TodoListDisplayerProps<Item extends Record<string, any>> = {
   layoutType?: 'table'
   getItemKey?: ItemsListBasicProps<Item>['getItemKey']
   onDeleteItem?: (item: Item) => void
+  onClickClearBtn?: () => void
   componentParts?: Partial<ItemsListBasicProps<Item>['componentParts']>
 }
 /** just basic layout  */
 
-export const TodoListItemsDisplayer = componentkit(
+export const TodoListItemTable = componentkit(
   'TodoListItemsDisplayer',
   (ComponentRoot) =>
-    <Item extends Record<string, any>>(props: TodoListDisplayerProps<Item>) =>
-      (
+    <Item extends Record<string, any>>(props: TodoListDisplayerProps<Item>) => {
+      const gridICSS: ICSS = { display: 'grid', gap: 12, gridTemplateColumns: `1fr 2fr 48px`, placeItems: 'center' }
+      return (
         <ComponentRoot>
           {props.items.length > 0 ? (
             <ItemsListBasic
@@ -27,19 +29,20 @@ export const TodoListItemsDisplayer = componentkit(
                   if (!firstItem) return null
                   const itemValues = Object.keys(firstItem)
                   return (
-                    <Div icss={{ display: 'grid', gridTemplateColumns: `repeat(${itemValues.length}, 1fr)` }}>
+                    <Div icss={gridICSS}>
                       {itemValues.map((v, idx) => (
-                        <Div key={idx} icss={{ fontWeight: 'bold' }}>
+                        <Div key={idx} icss={{ marginBlock: 4, fontSize: 18, fontWeight: 'bold' }}>
                           {stringify(v)}
                         </Div>
                       ))}
+                      <Div onClick={() => props.onClickClearBtn?.()}> Clear </Div>
                     </Div>
                   )
                 },
                 renderItem({ item }) {
                   const itemValues = Object.values(item)
                   return (
-                    <Div icss={{ display: 'grid', gap: 8, gridTemplateColumns: `1fr auto auto` }}>
+                    <Div icss={gridICSS}>
                       {itemValues.map((v, idx) => (
                         <Div key={idx}>{stringify(v)}</Div>
                       ))}
@@ -48,7 +51,6 @@ export const TodoListItemsDisplayer = componentkit(
                       <Icon
                         src={deleteIconUrl}
                         onClick={() => {
-                          console.log('item: ', item, itemValues)
                           props.onDeleteItem?.(item)
                         }}
                       />
@@ -60,6 +62,7 @@ export const TodoListItemsDisplayer = componentkit(
           ) : null}
         </ComponentRoot>
       )
+    }
 )
 
 function stringify(value: any): string {

@@ -25,7 +25,16 @@ function App() {
 
   return (
     <Div className={App.name}>
-      <Div icss={{ width: 'min-content', display: 'grid', justifyItems: 'center', gap: 8, padding: 16 }}>
+      <Div
+        icss={{
+          width: 'min-content',
+          display: 'grid',
+          justifyItems: 'center',
+          gap: 8,
+          padding: 16,
+          marginInline: 'auto'
+        }}
+      >
         <Row icss={{ alignItems: 'center', gap: 4 }}>
           <Input value={newTodoTitle} onUserInput={(t) => setNewTodoTitle(t)} onEnter={uploadNewTodoItem} />
           <Button size='sm' onClick={uploadNewTodoItem}>

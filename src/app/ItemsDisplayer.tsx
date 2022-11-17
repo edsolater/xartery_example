@@ -1,8 +1,8 @@
-import { formatDate } from '@edsolater/fnkit'
+import { formatDate, addDefault } from '@edsolater/fnkit'
 import { AddProps, componentkit, Div, DivProps, Group } from '@edsolater/uikit'
 import { ReactNode } from 'react'
 
-type _ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
+type ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
   items: T[]
   getItemKey: (info: { item: T; idx: number }) => string | number
 
@@ -21,14 +21,14 @@ type _ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> =
 }
 
 /** basic  */
-export const _ItemsListBasic = componentkit(
-  '_ItemsListBasic',
+export const ItemsListBasic = componentkit(
+  'ItemsListBasic',
   (ComponentRoot) =>
     <T extends Record<string, any>>({
       items,
       getItemKey,
       componentParts: { renderHeader, renderItem, HeaderProps, ItemProps, HeaderGroupProps, ItemGroupProps }
-    }: _ItemsListBasicProps<T>) =>
+    }: ItemsListBasicProps<T>) =>
       (
         <ComponentRoot icss={{ border: '1px solid', padding: 4 }}>
           <Group shadowProps={HeaderGroupProps} name='list-header'>
@@ -46,62 +46,51 @@ export const _ItemsListBasic = componentkit(
       )
 )
 
-type ItemsListDisplayerProps<Item extends Record<string, any>> = {
-  items: _ItemsListBasicProps<Item>['items']
+type TodoListDisplayerProps<Item extends Record<string, any>> = {
+  items: ItemsListBasicProps<Item>['items']
   layoutType?: 'table'
-  getItemKey?: _ItemsListBasicProps<Item>['getItemKey']
-  componentParts?: Partial<Pick<_ItemsListBasicProps<Item>['componentParts'], 'renderHeader' | 'renderItem'>>
+  getItemKey?: ItemsListBasicProps<Item>['getItemKey']
+  componentParts?: Partial<ItemsListBasicProps<Item>['componentParts']>
 }
 
 /** just basic layout  */
-export const ItemsListDisplayer = componentkit(
-  'ItemsListDisplayer',
+export const TodoListDisplayer = componentkit(
+  'TodoListDisplayer',
   (ComponentRoot) =>
-    <Item extends Record<string, any>>({
-      items,
-      layoutType = 'table',
-      getItemKey,
-      componentParts
-    }: ItemsListDisplayerProps<Item>) => {
-      const typeMap = {
-        table: () => (
-          <_ItemsListBasic
+    <Item extends Record<string, any>>({ items, getItemKey, componentParts }: TodoListDisplayerProps<Item>) =>
+      (
+        <ComponentRoot>
+          <ItemsListBasic
             items={items}
             getItemKey={getItemKey ?? (({ item, idx }) => item.id ?? idx)}
-            componentParts={{
-              renderHeader:
-                componentParts?.renderHeader ??
-                (({ firstItem }) => {
-                  if (!firstItem) return null
-                  const itemValues = Object.keys(firstItem)
-                  return (
-                    <Div icss={{ display: 'grid', gridTemplateColumns: `repeat(${itemValues.length}, 1fr)` }}>
-                      {itemValues.map((v, idx) => (
-                        <Div key={idx} icss={{ fontWeight: 'bold' }}>
-                          {stringify(v)}
-                        </Div>
-                      ))}
-                    </Div>
-                  )
-                }),
-              renderItem:
-                componentParts?.renderItem ??
-                (({ item }) => {
-                  const itemValues = Object.values(item)
-                  return (
-                    <Div icss={{ display: 'grid', gridTemplateColumns: `repeat(${itemValues.length}, 1fr)` }}>
-                      {itemValues.map((v, idx) => (
-                        <Div key={idx}>{stringify(v)}</Div>
-                      ))}
-                    </Div>
-                  )
-                })
-            }}
+            componentParts={addDefault(componentParts ?? {}, {
+              renderHeader({ firstItem }) {
+                if (!firstItem) return null
+                const itemValues = Object.keys(firstItem)
+                return (
+                  <Div icss={{ display: 'grid', gridTemplateColumns: `repeat(${itemValues.length}, 1fr)` }}>
+                    {itemValues.map((v, idx) => (
+                      <Div key={idx} icss={{ fontWeight: 'bold' }}>
+                        {stringify(v)}
+                      </Div>
+                    ))}
+                  </Div>
+                )
+              },
+              renderItem({ item }) {
+                const itemValues = Object.values(item)
+                return (
+                  <Div icss={{ display: 'grid', gridTemplateColumns: `repeat(${itemValues.length}, 1fr)` }}>
+                    {itemValues.map((v, idx) => (
+                      <Div key={idx}>{stringify(v)}</Div>
+                    ))}
+                  </Div>
+                )
+              }
+            })}
           />
-        )
-      }
-      return <ComponentRoot>{typeMap[layoutType]()}</ComponentRoot>
-    }
+        </ComponentRoot>
+      )
 )
 
 function stringify(value: any): string {

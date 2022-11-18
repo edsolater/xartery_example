@@ -1,4 +1,4 @@
-import { AddProps, componentkit, Div, DivProps, Group } from '@edsolater/uikit'
+import { AddProps, componentkit, Div, DivProps, For, Group } from '@edsolater/uikit'
 import { ReactNode } from 'react'
 
 export type ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
@@ -37,14 +37,13 @@ export const ItemsListBasic = componentkit(
             name='list-item-group'
             icss={{ display: 'grid', gap: 8 }}
           >
-            {props.items.map((item, idx) => {
-              const key = props.getItemKey({ item, idx })
-              return (
-                <AddProps shadowProps={props.componentParts.ItemProps} key={key}>
+            <For each={props.items} getKey={(item, idx) => props.getItemKey({ item, idx })}>
+              {(item) => (
+                <AddProps shadowProps={props.componentParts.ItemProps}>
                   {props.componentParts.renderItem({ item })}
                 </AddProps>
-              )
-            })}
+              )}
+            </For>
           </Group>
         </ComponentRoot>
       )

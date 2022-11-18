@@ -2,7 +2,7 @@ import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
 import { Div, injectGlobalResetStyle } from '@edsolater/uikit'
 import { useConsoleLog } from '../hookit/useConsoleLog'
 import { useXDBList } from './dataHooks'
-import { TodoList } from './TodoList'
+import { TodoList } from '../components/TodoList'
 
 // should be a `<TodoList>` component
 export function App() {

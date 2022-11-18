@@ -1,6 +1,6 @@
 import { addDefault, formatDate } from '@edsolater/fnkit'
 import { componentkit, Div, hover, Icon, ICSS } from '@edsolater/uikit'
-import { ItemsListBasic, ItemsListBasicProps } from './ItemsDisplayer'
+import { ItemsListBasic, ItemsListBasicProps } from '../ItemsDisplayer'
 import deleteIconUrl from '/delete.svg'
 
 export type TodoListDisplayerProps<Item extends Record<string, any>> = {
@@ -18,7 +18,6 @@ export const TodoListItemTable = componentkit(
   (ComponentRoot) =>
     <Item extends Record<string, any>>(props: TodoListDisplayerProps<Item>) => {
       const gridICSS: ICSS = { display: 'grid', gap: 12, gridTemplateColumns: `1fr 2fr 48px`, placeItems: 'center' }
-      console.log('grid')
       return (
         <ComponentRoot>
           {props.items.length > 0 ? (

@@ -1,5 +1,6 @@
-import { addDefault, formatDate } from '@edsolater/fnkit'
-import { componentkit, Div, hover, Icon, ICSS } from '@edsolater/uikit'
+import { formatDate } from '@edsolater/fnkit'
+import { componentkit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
+import { click } from '@edsolater/uikit/plugins'
 import { ItemsListBasic, ItemsListBasicProps } from '../ItemsDisplayer'
 import deleteIconUrl from '/delete.svg'
 
@@ -9,8 +10,12 @@ export type TodoListDisplayerProps<Item extends Record<string, any>> = {
   getItemKey?: ItemsListBasicProps<Item>['getItemKey']
   onDeleteItem?: (item: Item) => void
   onClickClearBtn?: () => void
-  componentParts?: Partial<ItemsListBasicProps<Item>['componentParts']>
-}
+} & Partial<
+  Pick<
+    ItemsListBasicProps<Item>,
+    'renderHeader' | 'renderItem' | 'propofHeader' | 'propofHeaderGroup' | 'propofItemGroup' | 'propofItem'
+  >
+>
 /** just basic layout  */
 
 export const TodoListItemTable = componentkit(
@@ -22,10 +27,12 @@ export const TodoListItemTable = componentkit(
         <ComponentRoot>
           {props.items.length > 0 ? (
             <ItemsListBasic
+              {...props}
               items={props.items}
               getItemKey={props.getItemKey ?? (({ item, idx }) => item.id ?? idx)}
-              componentParts={addDefault(props.componentParts ?? {}, {
-                renderHeader({ firstItem }) {
+              renderHeader={
+                props.renderHeader ??
+                (({ firstItem }) => {
                   if (!firstItem) return null
                   const itemValues = Object.keys(firstItem)
                   return (
@@ -36,35 +43,35 @@ export const TodoListItemTable = componentkit(
                         </Div>
                       ))}
 
-                      <Div onClick={() => props.onClickClearBtn?.()}> Clear </Div>
+                      <Div plugins={click(() => props.onClickClearBtn?.())}> Clear </Div>
                     </Div>
                   )
-                },
-                renderItem({ item }) {
-                  console.log('item: ', item)
+                })
+              }
+              renderItem={
+                props.renderItem ??
+                (({ item }) => {
                   const itemValues = Object.values(item)
                   return (
                     <Div icss={gridICSS}>
                       {itemValues.map((v, idx) => (
                         <Div key={idx}>{stringify(v)}</Div>
                       ))}
-
-                      {/* delete item */}
-                      <Icon
-                        src={deleteIconUrl}
-                        onClick={() => {
-                          props.onDeleteItem?.(item)
-                        }}
-                        plugins={hover(({ is }) => {
-                          if (is === 'start') {
-                            console.log('hover: ', itemValues)
-                          }
-                        })}
+                      <Tooltip
+                        name='delete-icon'
+                        renderButton={
+                          <Icon
+                            src={deleteIconUrl}
+                            icss={{ color: 'crimson' }}
+                            plugins={[click(() => props.onDeleteItem?.(item))]}
+                          />
+                        }
+                        renderTooltipContent={'Remove item'}
                       />
                     </Div>
                   )
-                }
-              })}
+                })
+              }
             />
           ) : null}
         </ComponentRoot>

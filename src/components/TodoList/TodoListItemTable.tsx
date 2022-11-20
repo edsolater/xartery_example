@@ -1,6 +1,6 @@
 import { formatDate } from '@edsolater/fnkit'
-import { componentkit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
-import { click } from '@edsolater/uikit/plugins'
+import { componentkit, Div, Icon, ICSS } from '@edsolater/uikit'
+import { click, tooltip } from '@edsolater/uikit/plugins'
 import { ItemsListBasic, ItemsListBasicProps } from '../ItemsDisplayer'
 import deleteIconUrl from '/delete.svg'
 
@@ -57,16 +57,10 @@ export const TodoListItemTable = componentkit(
                       {itemValues.map((v, idx) => (
                         <Div key={idx}>{stringify(v)}</Div>
                       ))}
-                      <Tooltip
-                        name='delete-icon'
-                        renderButton={
-                          <Icon
-                            src={deleteIconUrl}
-                            icss={{ color: 'crimson' }}
-                            plugins={[click(() => props.onDeleteItem?.(item))]}
-                          />
-                        }
-                        renderTooltipContent={'Remove item'}
+                      <Icon
+                        src={deleteIconUrl}
+                        icss={{ color: 'crimson' }}
+                        plugins={[click(() => props.onDeleteItem?.(item)), tooltip({ content: 'remove item' })]}
                       />
                     </Div>
                   )

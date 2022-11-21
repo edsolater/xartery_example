@@ -1,5 +1,5 @@
 import { SKeyof } from '@edsolater/fnkit'
-import { XDBObjectStoreOptions, XDBDatabase, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
+import { XDBObjectStoreOptions, XDBDatabase, XDBObjectStore, XDBRecordItem, XDBTemplate } from './type'
 import { createXDB } from './createXDB'
 
 type XDBOptions = {
@@ -29,14 +29,14 @@ function getXDB<S extends XDBTemplate = XDBTemplate>(params: XDBOptions): Promis
   })
 }
 
-type XDBObjectStoreAutoCreateOptions<T extends XDBRecordTemplate> = {
+type XDBObjectStoreAutoCreateOptions<T extends XDBRecordItem> = {
   keyPath?: SKeyof<T>
   autoIncrement?: boolean
   indexes?: { property: SKeyof<T>; options?: IDBIndexParameters }[]
   initRecords?: T[]
 }
 
-export async function getXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>(params: {
+export async function getXDBObjectStore<T extends XDBRecordItem = XDBRecordItem>(params: {
   dbOptions: XDBOptions
   objectStoreInitOptions: XDBObjectStoreOptions & Partial<XDBObjectStoreAutoCreateOptions<T>>
 }): Promise<XDBObjectStore<T>> {

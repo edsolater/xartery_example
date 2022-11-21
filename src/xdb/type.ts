@@ -12,17 +12,27 @@ export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
   getObjectStore(opts: XDBObjectStoreOptions): XDBObjectStore<Valueof<S>[number]>
 }
 
-export type XDBObjectStoreEventConfigs<T extends XDBRecordTemplate> = {
-  change: (utils: { objectStore: XDBObjectStore<T>; xdb: XDBDatabase }) => void
-  init: (utils: { objectStore: XDBObjectStore<T>; xdb: XDBDatabase }) => void
+export type XDBObjectStoreEventConfigs<I extends XDBRecordItem> = {
+  change: (utils: { objectStore: XDBObjectStore<I>; xdb: XDBDatabase }) => void
+  init: (utils: { objectStore: XDBObjectStore<I>; xdb: XDBDatabase }) => void
 }
 
-export type XDBTrashStore<T extends XDBRecordTemplate = XDBRecordTemplate> = Omit<
-  XDBObjectStore<T>,
+export type XDBTrashStore<I extends XDBRecordItem = XDBRecordItem> = Omit<
+  XDBObjectStore<I>,
   'deleteWithoutTrash' | 'clearWithTrash' | 'trash'
 >
 
-export type XDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate> = {
+export type XDBObjectStoreAction<I extends XDBRecordItem> =
+  | {
+      item: I
+      actionType: 'set' | 'delete'
+    }
+  | {
+      items: I[]
+      actionType: 'setItems' | 'deleteItems' | 'clear'
+    }
+
+export type XDBObjectStore<I extends XDBRecordItem = XDBRecordItem> = {
   _original: IDBObjectStore
   _transaction: IDBObjectStore['transaction']
   _xdb: XDBDatabase
@@ -33,26 +43,30 @@ export type XDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate> = {
   autoIncrement: IDBObjectStore['autoIncrement']
 
   // NOTE: temporary do not care about objectStore's index
-  /** hanle index */
-  index(name: string): XDBIndex<T>
-  /** only in version change */
-  createIndex(name: string, opts?: IDBIndexParameters): XDBIndex<T>
-  // mutate data
-  getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
-  get(key: SKeyof<T>): Promise<Valueof<T>>
-  set(value: T): Promise<boolean>
-  setItems(values: T[]): Promise<boolean>
+  index(name: string): XDBIndex<I>
+  createIndex(name: string, opts?: IDBIndexParameters): XDBIndex<I>
 
-  delete(key: SKeyof<T>): Promise<boolean>
-  clear(): Promise<boolean>
+  getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<I[]>
+  get(key: SKeyof<I>): Promise<I>
+
+  set(item: I, options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
+  setItems(items: I[], options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
+  delete(item: I, options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
+  deleteItems(items: I[], options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
+  clear(options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
+
+  _redoActionStack: XDBObjectStoreAction<I>[]
+  _actionStack: XDBObjectStoreAction<I>[]
+  undo(): void
+  redo(): void
   /** @todo more operate methods */
-} & EventCenter<XDBObjectStoreEventConfigs<T>>
+} & EventCenter<XDBObjectStoreEventConfigs<I>>
 
-export type XDBIndex<T> = {
+export type XDBIndex<I extends XDBRecordItem = XDBRecordItem> = {
   _original: IDBIndex
-  get(opts: { query: TODO }): Promise<T[]>
-  get(key: string /** the value of keyPath */): Promise<T>
+  get(opts: { query: TODO }): Promise<I[]>
+  get(key: string /** the value of keyPath */): Promise<I>
 }
 
-export type XDBRecordTemplate = Record<string, any>
-export type XDBTemplate = Record<string, XDBRecordTemplate[]>
+export type XDBRecordItem = Record<string, any>
+export type XDBTemplate = Record<string, XDBRecordItem[]>

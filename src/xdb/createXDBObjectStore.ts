@@ -1,12 +1,12 @@
 import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
-import { observablize, respondRequestValue } from './tools'
-import { XDBIndex, XDBObjectStore, XDBObjectStoreEventConfigs, XDBRecordTemplate } from './type'
 import { createXDB } from './createXDB'
 import { createXDBIndex } from './createXDBIndex'
-import { SKeyof } from '@edsolater/fnkit'
+import { createXDBObjectStoreAction } from './createXDBObjectStoreAction'
+import { observablize, respondRequestValue } from './tools'
+import { XDBIndex, XDBObjectStore, XDBObjectStoreAction, XDBObjectStoreEventConfigs, XDBRecordItem } from './type'
 
-export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
+export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
   idb,
   idbOpenRequest,
   name,
@@ -16,7 +16,7 @@ export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   idbOpenRequest: IDBOpenDBRequest
   name: string
   transactionMode?: IDBTransactionMode
-}): XDBObjectStore<T> {
+}): XDBObjectStore<I> {
   const xdb = createXDB({ idb, request: idbOpenRequest })
 
   if (idbOpenRequest.readyState === 'done') {
@@ -29,13 +29,14 @@ export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     })
   }
   idbOpenRequest.readyState === 'done'
-
+  const redoStack = [] as XDBObjectStoreAction<I>[]
+  const actionStack = [] as XDBObjectStoreAction<I>[]
   const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
   const idbObjectStore = () => idbTransaction().objectStore(name)
-  const index: XDBObjectStore<T>['index'] = (name) => createXDBIndex(idbObjectStore().index(name))
+  const index: XDBObjectStore<I>['index'] = (name) => createXDBIndex(idbObjectStore().index(name))
 
-  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore().get(key))
-  const getAll: XDBObjectStore<T>['getAll'] = ({ query, direction } = {}) =>
+  const get: XDBObjectStore<I>['get'] = (key) => respondRequestValue(idbObjectStore().get(key))
+  const getAll: XDBObjectStore<I>['getAll'] = ({ query, direction } = {}) =>
     new Promise((resolve, reject) => {
       const values = [] as any[]
       const cursor$ = observablize(idbObjectStore().openCursor(query, direction))
@@ -54,46 +55,110 @@ export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
       })
     })
 
-  const set: XDBObjectStore<T>['set'] = async (value) => {
+  const setItem: XDBObjectStore<I>['set'] = async (item, options) => {
     const objectStore = idbObjectStore()
     objectStore.transaction.addEventListener('complete', () => {
       eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
     })
+    const coreAction = () => {
+      // record in stack
+      !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'set', item }))
+      // clear redo stack
+      redoStack.splice(0, redoStack.length)
 
-    const coreAction = () => objectStore.put(value)
-
+      return objectStore.put(item)
+    }
     return Boolean(await respondRequestValue(coreAction()))
   }
 
-  const setItems: XDBObjectStore<T>['setItems'] = (values) =>
-    Promise.all(values.map((value) => set(value))).then(
+  const setItems: XDBObjectStore<I>['setItems'] = async (items, options) => {
+    const actionResult = await Promise.all(items.map((item) => setItem(item, { ignoreRecordInStack: true }))).then(
       () => true,
       () => false
     )
-
-  const deleteItem: XDBObjectStore<T>['delete'] = async (key: SKeyof<T>) => {
-    const objectStore = idbObjectStore()
-    objectStore.transaction.addEventListener('complete', () => {
-      eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
-    })
-
-    const coreAction = () => objectStore.delete(key)
-
-    return Boolean(await respondRequestValue(coreAction()))
+    // record in stack
+    !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'setItems', items }))
+    return actionResult
   }
 
-  const clear: XDBObjectStore<T>['clear'] = async () => {
-    const objectStore = idbObjectStore()
-    objectStore.transaction.addEventListener('complete', () => {
-      eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
-    })
+  const deleteItem: XDBObjectStore<I>['delete'] = async (item, options) => {
+    const key = item[getKeyPath()]
+    const coreLogic = () => {
+      // record in stack
+      !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'delete', item }))
 
-    const coreAction = () => objectStore.clear()
+      const objectStore = idbObjectStore()
+      objectStore.transaction.addEventListener('complete', () => {
+        eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
+      })
+      return objectStore.delete(key)
+    }
 
-    return Boolean(await respondRequestValue(coreAction()))
+    return Boolean(await respondRequestValue(coreLogic()))
   }
 
-  const eventCenter = EventCenter<XDBObjectStoreEventConfigs<T>>({
+  const deleteItems: XDBObjectStore<I>['deleteItems'] = async (items, options) => {
+    const actionResult = await Promise.all(items.map((item) => deleteItem(item, { ignoreRecordInStack: true }))).then(
+      () => true,
+      () => false
+    )
+    // record in stack
+    !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'deleteItems', items }))
+    return actionResult
+  }
+
+  const clear: XDBObjectStore<I>['clear'] = async (options) => {
+    const coreLogic = async () => {
+      await getAll().then((items) => {
+        !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'clear', items }))
+      })
+
+      const objectStore = idbObjectStore()
+      objectStore.transaction.addEventListener('complete', () => {
+        eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
+      })
+      return objectStore.clear()
+    }
+
+    return Boolean(await respondRequestValue(await coreLogic()))
+  }
+
+  const redo: XDBObjectStore<I>['redo'] = () => {
+    const action = redoStack.pop()
+    if (!action) return
+    if (action.actionType === 'set') {
+      setItem(action.item, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'setItems') {
+      setItems(action.items, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'clear') {
+      clear({ ignoreRecordInStack: true })
+    } else if (action.actionType === 'delete') {
+      deleteItem(action.item, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'deleteItems') {
+      deleteItems(action.items, { ignoreRecordInStack: true })
+    }
+  }
+
+  const undo: XDBObjectStore<I>['undo'] = () => {
+    const action = actionStack.pop()
+    if (!action) return
+    if (action.actionType === 'set') {
+      deleteItem(action.item, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'setItems') {
+      deleteItems(action.items, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'clear') {
+      setItems(action.items, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'delete') {
+      setItem(action.item, { ignoreRecordInStack: true })
+    } else if (action.actionType === 'deleteItems') {
+      setItems(action.items, { ignoreRecordInStack: true })
+    }
+  }
+
+  const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<I> =>
+    createXDBIndex<I>(idbObjectStore().createIndex(name, name, opts))
+
+  const eventCenter = EventCenter<XDBObjectStoreEventConfigs<I>>({
     // changeInitly({ emit }) {
     // const transaction = idbTransaction()
     // transaction.addEventListener('complete', () => {
@@ -101,10 +166,6 @@ export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     // })
     // }
   })
-
-  const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<T> =>
-    createXDBIndex<T>(idbObjectStore().createIndex(name, name, opts))
-
   const xobjectStore = mergeEventCenterFeature(
     {
       get _original() {
@@ -134,11 +195,17 @@ export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
 
       getAll,
       get,
-      set,
+      set: setItem,
       setItems,
 
       delete: deleteItem,
-      clear
+      deleteItems,
+      clear,
+
+      _redoActionStack: redoStack,
+      _actionStack: actionStack,
+      undo,
+      redo
     },
     eventCenter
   )

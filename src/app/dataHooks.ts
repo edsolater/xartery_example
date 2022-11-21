@@ -6,7 +6,6 @@ import { initData, TodoListItem } from './dataInitShape'
 
 export const useXDBList = () => {
   const [todoList, setList] = useState<TodoListItem[]>([])
-  const [trashTodoList, setTrashTodoList] = useState<TodoListItem[]>([])
   const objectStoreRef = useRef<XDBObjectStore<TodoListItem>>()
 
   //#region ------------------- subscribe to xdb's onChange -------------------
@@ -43,30 +42,35 @@ export const useXDBList = () => {
   const insertTodoItem =
     (objectStore: RefObject<XDBObjectStore | XDBTrashStore | undefined>) => (info: { todoTitle: string }) => {
       if (!objectStore.current) return
-      const newItem = { title: info.todoTitle, createAt: new Date() } as TodoListItem
-      objectStore.current.set(newItem)
+      objectStore.current.set({ title: info.todoTitle, createAt: new Date() })
     }
 
   const deleteTodoItem =
     (objectStore: RefObject<XDBObjectStore | XDBTrashStore | undefined>) => (info: { item: TodoListItem }) => {
       if (!objectStore.current) return
-      console.log('objectStore.current.keyPath: ', objectStore.current.keyPath)
-      objectStore.current.delete(info.item[objectStore.current.keyPath])
+      objectStore.current.delete(info.item)
     }
 
   const clearItems = (objectStore: RefObject<XDBObjectStore | XDBTrashStore | undefined>) => () => {
     if (!objectStore.current) return
     objectStore.current.clear()
   }
+  const undo = () => {
+    objectStoreRef.current?.undo()
+  }
+  const redo = () => {
+    objectStoreRef.current?.redo()
+  }
   //#endregion
 
   return {
     todoList,
-    trashTodoList,
 
     insertTodoItem: insertTodoItem(objectStoreRef),
     deleteTodoItem: deleteTodoItem(objectStoreRef),
-    clear: clearItems(objectStoreRef)
+    clear: clearItems(objectStoreRef),
+    undo,
+    redo
   }
 }
 

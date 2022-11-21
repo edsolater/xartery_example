@@ -3,19 +3,17 @@ import { useState } from 'react'
 import { TodoListDisplayerProps, TodoListItemTable } from './TodoListItemTable'
 
 export type TodoListProps<T extends Record<string, any>> = {
-  items: T[]
-  getItemKey: TodoListDisplayerProps<T>['getItemKey']
   onInsert?: (text: string) => void
-} & Pick<TodoListDisplayerProps<T>, 'onDeleteItem' | 'onClickClearBtn'>
+} & Pick<TodoListDisplayerProps<T>, 'items' | 'getItemKey' | 'onDeleteItem' | 'onClickClearBtn'>
 
 export const TodoList = componentkit(
   'TodoList',
   (ComponentRoot) =>
-    <T extends Record<string, any>>(props: TodoListProps<T>) => {
+    <T extends Record<string, any>>({ onInsert, ...props }: TodoListProps<T>) => {
       const [newTodoTitle, setNewTodoTitle] = useState<string>()
       const uploadNewTodoItem = () => {
         if (!newTodoTitle) return
-        props.onInsert?.(newTodoTitle)
+        onInsert?.(newTodoTitle)
         setNewTodoTitle(undefined)
       }
       return (
@@ -37,7 +35,7 @@ export const TodoList = componentkit(
               </Button>
             </Row>
 
-            <TodoListItemTable {...props} items={props.items} getItemKey={props.getItemKey} />
+            <TodoListItemTable {...props} />
           </Div>
         </ComponentRoot>
       )

@@ -1,6 +1,6 @@
 import { formatDate } from '@edsolater/fnkit'
-import { componentkit, Div, Icon, ICSS } from '@edsolater/uikit'
-import { click, WrapTooltip } from '@edsolater/uikit/plugins'
+import { componentkit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
+import { click, Kit } from '@edsolater/uikit/plugins'
 import { ItemsListBasic, ItemsListBasicProps } from '../ItemsDisplayer'
 import deleteIconUrl from '/delete.svg'
 
@@ -21,17 +21,27 @@ export type TodoListDisplayerProps<Item extends Record<string, any>> = {
 export const TodoListItemTable = componentkit(
   'TodoListItemsDisplayer',
   (ComponentRoot) =>
-    <Item extends Record<string, any>>(props: TodoListDisplayerProps<Item>) => {
+    <Item extends Record<string, any>>({
+      items,
+      layoutType,
+      getItemKey,
+      onDeleteItem,
+      onClickClearBtn,
+      
+      renderHeader,
+      renderItem,
+      ...props
+    }: TodoListDisplayerProps<Item>) => {
       const gridICSS: ICSS = { display: 'grid', gap: 12, gridTemplateColumns: `1fr 2fr 48px`, placeItems: 'center' }
       return (
         <ComponentRoot>
-          {props.items.length > 0 ? (
+          {items.length > 0 ? (
             <ItemsListBasic
               {...props}
-              items={props.items}
-              getItemKey={props.getItemKey ?? (({ item, idx }) => item.id ?? idx)}
+              items={items}
+              getItemKey={getItemKey ?? (({ item, idx }) => item.id ?? idx)}
               renderHeader={
-                props.renderHeader ??
+                renderHeader ??
                 (({ firstItem }) => {
                   if (!firstItem) return null
                   const itemValues = Object.keys(firstItem)
@@ -43,13 +53,13 @@ export const TodoListItemTable = componentkit(
                         </Div>
                       ))}
 
-                      <Div plugins={click(() => props.onClickClearBtn?.())}> Clear </Div>
+                      <Div plugins={click(() => onClickClearBtn?.())}> Clear </Div>
                     </Div>
                   )
                 })
               }
               renderItem={
-                props.renderItem ??
+                renderItem ??
                 (({ item }) => {
                   const itemValues = Object.values(item)
                   return (
@@ -60,7 +70,10 @@ export const TodoListItemTable = componentkit(
                       <Icon
                         src={deleteIconUrl}
                         icss={{ color: 'crimson' }}
-                        plugins={[click(() => props.onDeleteItem?.(item)), WrapTooltip({ content: 'remove item' })]}
+                        plugins={[
+                          click(() => onDeleteItem?.(item)),
+                          Kit((self) => <Tooltip renderButton={self}>delete</Tooltip>)
+                        ]}
                       />
                     </Div>
                   )

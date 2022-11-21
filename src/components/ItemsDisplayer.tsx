@@ -1,13 +1,11 @@
-import { AddProps, componentkit, DivProps, For, Group } from '@edsolater/uikit'
-import { ReactNode } from 'react'
-
+import { AddProps, componentkit, DivChildNode, DivProps, For, Group } from '@edsolater/uikit'
 
 export type ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
   items: T[]
   getItemKey: (info: { item: T; idx: number }) => string | number
 
-  renderItem: (info: { item: T }) => ReactNode
-  renderHeader: (info: { items: T[]; firstItem?: T }) => ReactNode
+  renderItem: (info: { item: T }) => DivChildNode
+  renderHeader: (info: { items: T[]; firstItem?: T }) => DivChildNode
   /** only when renderItem is not set */
   propofItem?: DivProps
   /** only when renderHeader is not set */
@@ -22,18 +20,26 @@ export type ItemsListBasicProps<T extends Record<string, any> = Record<string, a
 export const ItemsListBasic = componentkit(
   'ItemsListBasic',
   (ComponentRoot) =>
-    <T extends Record<string, any>>(props: ItemsListBasicProps<T>) =>
+    <T extends Record<string, any>>({
+      items,
+      getItemKey,
+
+      renderItem,
+      renderHeader,
+      propofHeader,
+      propofHeaderGroup,
+      propofItem,
+      propofItemGroup
+    }: ItemsListBasicProps<T>) =>
       (
         <ComponentRoot icss={{ border: '1px solid', padding: 4 }}>
-          <Group shadowProps={props.propofHeaderGroup} name='list-header'>
-            <AddProps shadowProps={props.propofHeader}>
-              {props.renderHeader({ items: props.items, firstItem: props.items.at(0) })}
-            </AddProps>
+          <Group shadowProps={propofHeaderGroup} name='list-header'>
+            <AddProps shadowProps={propofHeader}>{renderHeader({ items: items, firstItem: items.at(0) })}</AddProps>
           </Group>
 
-          <Group shadowProps={props.propofItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
-            <For each={props.items} getKey={(item, idx) => props.getItemKey({ item, idx })}>
-              {(item) => <AddProps shadowProps={props.propofItem}>{props.renderItem({ item })}</AddProps>}
+          <Group shadowProps={propofItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
+            <For each={items} getKey={(item, idx) => getItemKey({ item, idx })}>
+              {(item) => <AddProps shadowProps={propofItem}>{renderItem({ item })}</AddProps>}
             </For>
           </Group>
         </ComponentRoot>

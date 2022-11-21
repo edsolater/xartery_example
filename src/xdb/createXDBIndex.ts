@@ -1,7 +1,7 @@
-import { XDBIndex } from './type'
+import { XDBIndex, XDBRecordItem } from './type'
 
-export function createXDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {
-  const get: XDBIndex<T>['get'] = () => {
+export function createXDBIndex<I extends XDBRecordItem = XDBRecordItem>(originalIndex: IDBIndex): XDBIndex<I> {
+  const get: XDBIndex<I>['get'] = () => {
     throw 'not imply yet'
   }
   return { _original: originalIndex, get }

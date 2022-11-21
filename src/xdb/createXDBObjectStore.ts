@@ -1,4 +1,5 @@
 import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
+import { WeakerSet } from '../neuron/WeakerSet'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { createXDB } from './createXDB'
 import { createXDBIndex } from './createXDBIndex'
@@ -29,8 +30,8 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     })
   }
   idbOpenRequest.readyState === 'done'
-  const redoStack = [] as XDBObjectStoreAction<I>[]
-  const actionStack = [] as XDBObjectStoreAction<I>[]
+  const redoStack = new WeakerSet<XDBObjectStoreAction<I>>()
+  const actionStack = new WeakerSet<XDBObjectStoreAction<I>>()
   const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
   const idbObjectStore = () => idbTransaction().objectStore(name)
   const index: XDBObjectStore<I>['index'] = (name) => createXDBIndex(idbObjectStore().index(name))
@@ -62,9 +63,9 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     })
     const coreAction = () => {
       // record in stack
-      !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'set', item }))
+      !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'set', item }))
       // clear redo stack
-      redoStack.splice(0, redoStack.length)
+      redoStack.clear()
 
       return objectStore.put(item)
     }
@@ -77,15 +78,16 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
       () => false
     )
     // record in stack
-    !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'setItems', items }))
+    !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'setItems', items }))
     return actionResult
+    
   }
 
   const deleteItem: XDBObjectStore<I>['delete'] = async (item, options) => {
     const key = item[getKeyPath()]
     const coreLogic = () => {
       // record in stack
-      !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'delete', item }))
+      !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'delete', item }))
 
       const objectStore = idbObjectStore()
       objectStore.transaction.addEventListener('complete', () => {
@@ -103,14 +105,14 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
       () => false
     )
     // record in stack
-    !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'deleteItems', items }))
+    !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'deleteItems', items }))
     return actionResult
   }
 
   const clear: XDBObjectStore<I>['clear'] = async (options) => {
     const coreLogic = async () => {
       await getAll().then((items) => {
-        !options?.ignoreRecordInStack && actionStack.push(createXDBObjectStoreAction({ actionType: 'clear', items }))
+        !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'clear', items }))
       })
 
       const objectStore = idbObjectStore()
@@ -124,8 +126,9 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
   }
 
   const redo: XDBObjectStore<I>['redo'] = () => {
-    const action = redoStack.pop()
+    const action = [...redoStack.values()].at(-1)
     if (!action) return
+    redoStack.delete(action)
     if (action.actionType === 'set') {
       setItem(action.item, { ignoreRecordInStack: true })
     } else if (action.actionType === 'setItems') {
@@ -140,8 +143,9 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
   }
 
   const undo: XDBObjectStore<I>['undo'] = () => {
-    const action = actionStack.pop()
+    const action = [...actionStack.values()].at(-1)
     if (!action) return
+    redoStack.delete(action)
     if (action.actionType === 'set') {
       deleteItem(action.item, { ignoreRecordInStack: true })
     } else if (action.actionType === 'setItems') {

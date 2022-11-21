@@ -13,20 +13,19 @@ export type XDBDatabase<S extends XDBTemplate = XDBTemplate> = {
 }
 
 export type XDBObjectStoreEventConfigs<T extends XDBRecordTemplate> = {
-  change: (utils: {
-    objectStore: XDBObjectStore<T>
-    xdb: XDBDatabase
-  }) => void
-  init: (utils: {
-    objectStore: XDBObjectStore<T>
-    xdb: XDBDatabase
-  }) => void
+  change: (utils: { objectStore: XDBObjectStore<T>; xdb: XDBDatabase }) => void
+  init: (utils: { objectStore: XDBObjectStore<T>; xdb: XDBDatabase }) => void
 }
 
-export type XDBObjectStore<T extends XDBRecordTemplate> = {
+export type XDBTrashStore<T extends XDBRecordTemplate = XDBRecordTemplate> = Omit<
+  XDBObjectStore<T>,
+  'deleteWithoutTrash' | 'clearWithTrash' | 'trash'
+>
+
+export type XDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate> = {
   _original: IDBObjectStore
-  transaction: IDBObjectStore['transaction']
-  xdb: XDBDatabase
+  _transaction: IDBObjectStore['transaction']
+  _xdb: XDBDatabase
 
   name: IDBObjectStore['name']
   indexNames: IDBObjectStore['indexNames']
@@ -40,7 +39,7 @@ export type XDBObjectStore<T extends XDBRecordTemplate> = {
   createIndex(name: string, opts?: IDBIndexParameters): XDBIndex<T>
   // mutate data
   getAll(opts?: { query?: IDBKeyRange; direction?: IDBCursorDirection }): Promise<T[]>
-  get(key: SKeyof<T>): Promise<T>
+  get(key: SKeyof<T>): Promise<Valueof<T>>
   set(value: T): Promise<boolean>
   setItems(values: T[]): Promise<boolean>
 

@@ -18,7 +18,7 @@ export type TodoListDisplayerProps<Item extends Record<string, any>> = {
 >
 /** just basic layout  */
 
-export const TodoListItemTable = componentkit(
+export const TodoListRemoveItemStack = componentkit(
   'TodoListItemsDisplayer',
   (ComponentRoot) =>
     <Item extends Record<string, any>>({
@@ -72,7 +72,11 @@ export const TodoListItemTable = componentkit(
                         icss={{ color: 'crimson' }}
                         plugins={[
                           click(() => onDeleteItem?.(item)),
-                          Kit((self) => <Tooltip placement='right' renderButton={self}>delete</Tooltip>)
+                          Kit((self) => (
+                            <Tooltip placement='right' renderButton={self}>
+                              delete
+                            </Tooltip>
+                          ))
                         ]}
                       />
                     </Div>

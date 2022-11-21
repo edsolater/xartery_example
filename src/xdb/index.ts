@@ -1,6 +1,6 @@
 import { SKeyof } from '@edsolater/fnkit'
 import { XDBObjectStoreOptions, XDBDatabase, XDBObjectStore, XDBRecordTemplate, XDBTemplate } from './type'
-import { wrapToXDB } from './wrapToXDB'
+import { createXDB } from './createXDB'
 
 type XDBOptions = {
   name: string
@@ -17,7 +17,7 @@ function getXDB<S extends XDBTemplate = XDBTemplate>(params: XDBOptions): Promis
     const originalRequest = globalThis.indexedDB.open(params.name, params.version)
     originalRequest.addEventListener('success', () => {
       const originalIDB = originalRequest.result
-      const xdb = wrapToXDB({ idb: originalIDB, request: originalRequest })
+      const xdb = createXDB({ idb: originalIDB, request: originalRequest })
       resolve(xdb)
     })
     originalRequest.addEventListener('error', (ev) => reject(ev))

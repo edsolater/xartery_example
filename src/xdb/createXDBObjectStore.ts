@@ -1,28 +1,12 @@
 import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { observablize, respondRequestValue } from './tools'
-import {
-  XDBDatabase,
-  XDBIndex,
-  XDBObjectStore,
-  XDBObjectStoreEventConfigs,
-  XDBRecordTemplate,
-  XDBTemplate
-} from './type'
+import { XDBIndex, XDBObjectStore, XDBObjectStoreEventConfigs, XDBRecordTemplate } from './type'
+import { createXDB } from './createXDB'
+import { createXDBIndex } from './createXDBIndex'
+import { SKeyof } from '@edsolater/fnkit'
 
-export function wrapToXDB<S extends XDBTemplate>({
-  idb,
-  request
-}: {
-  idb: IDBDatabase
-  request: IDBOpenDBRequest
-}): XDBDatabase<S> {
-  const getObjectStore: XDBDatabase['getObjectStore'] = ({ name, transactionMode = 'readwrite' }) =>
-    wrapToXDBObjectStore({ idb, idbOpenRequest: request, name, transactionMode })
-  return { _original: idb, getObjectStore }
-}
-
-export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
+export function createXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemplate>({
   idb,
   idbOpenRequest,
   name,
@@ -33,7 +17,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   name: string
   transactionMode?: IDBTransactionMode
 }): XDBObjectStore<T> {
-  const xdb = wrapToXDB({ idb, request: idbOpenRequest })
+  const xdb = createXDB({ idb, request: idbOpenRequest })
 
   if (idbOpenRequest.readyState === 'done') {
     setTimeout(() => {
@@ -48,9 +32,9 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
 
   const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
   const idbObjectStore = () => idbTransaction().objectStore(name)
-  const index: XDBObjectStore<T>['index'] = (name) => wrapToXDBIndex(idbObjectStore().index(name))
-  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore().get(String(key)))
+  const index: XDBObjectStore<T>['index'] = (name) => createXDBIndex(idbObjectStore().index(name))
 
+  const get: XDBObjectStore<T>['get'] = (key) => respondRequestValue(idbObjectStore().get(key))
   const getAll: XDBObjectStore<T>['getAll'] = ({ query, direction } = {}) =>
     new Promise((resolve, reject) => {
       const values = [] as any[]
@@ -87,7 +71,7 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
       () => false
     )
 
-  const deleteItem: XDBObjectStore<T>['delete'] = async (key: string) => {
+  const deleteItem: XDBObjectStore<T>['delete'] = async (key: SKeyof<T>) => {
     const objectStore = idbObjectStore()
     objectStore.transaction.addEventListener('complete', () => {
       eventCenter.emit('change', [{ objectStore: xobjectStore, xdb }])
@@ -119,18 +103,19 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
   })
 
   const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<T> =>
-    wrapToXDBIndex<T>(idbObjectStore().createIndex(name, name, opts))
+    createXDBIndex<T>(idbObjectStore().createIndex(name, name, opts))
 
   const xobjectStore = mergeEventCenterFeature(
     {
       get _original() {
         return idbObjectStore()
       },
-      get transaction() {
+      get _transaction() {
         return idbObjectStore().transaction
       },
-      xdb,
-
+      get _xdb() {
+        return xdb
+      },
       get name() {
         return idbObjectStore().name
       },
@@ -157,17 +142,9 @@ export function wrapToXDBObjectStore<T extends XDBRecordTemplate = XDBRecordTemp
     },
     eventCenter
   )
-
   return xobjectStore
 
   function getKeyPath() {
     return String(idbObjectStore().keyPath)
   }
-}
-
-export function wrapToXDBIndex<T>(originalIndex: IDBIndex): XDBIndex<T> {
-  const get: XDBIndex<T>['get'] = () => {
-    throw 'not'
-  }
-  return { _original: originalIndex, get }
 }

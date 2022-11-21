@@ -1,8 +1,8 @@
 import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
-import { Div, injectGlobalResetStyle } from '@edsolater/uikit'
+import { injectGlobalResetStyle, Row } from '@edsolater/uikit'
+import { TodoList } from '../components/TodoList'
 import { useConsoleLog } from '../hookit/useConsoleLog'
 import { useXDBList } from './dataHooks'
-import { TodoList } from '../components/TodoList'
 
 // should be a `<TodoList>` component
 export function App() {
@@ -12,10 +12,10 @@ export function App() {
   useConsoleLog({ data: { todoList }, disabled: true })
 
   return (
-    <Div className={App.name}>
+    <Row icss={{ justifyContent: 'center' }}>
       <TodoList
         items={todoList}
-        getItemKey={({ item }) => item.title}
+        getItemKey={({ item }) => item.createAt.getTime()}
         onInsert={(text) => {
           insertTodoItem({ todoTitle: text })
         }}
@@ -26,6 +26,6 @@ export function App() {
           clear()
         }}
       />
-    </Div>
+    </Row>
   )
 }

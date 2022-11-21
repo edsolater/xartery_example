@@ -15,7 +15,9 @@ const createWrapperRef = <T extends object>(v: T): WeakRef<T> => {
 const createWrapperRefIfNeeded = <T>(v: T) => (isObject(v) ? createWrapperRef(v) : v)
 const derefWrapperRefIfNeeded = <T>(v: T) => (v instanceof WeakRef ? v.deref() : v)
 
-/** it wont prevent GC for both key and value , and weakMap can be traverse
+/** 
+ * it wont prevent GC for both key and value , and weakMap can be traverse
+ * for JS's GC rule, WeakerSet will usually be cleared  in next frame(depends on GC)
  * @todo test it!!!
  */
 export class WeakerSet<T> extends Set<T> {

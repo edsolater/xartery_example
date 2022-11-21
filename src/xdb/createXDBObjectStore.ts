@@ -1,5 +1,4 @@
 import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
-import { WeakerSet } from '../neuron/WeakerSet'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { createXDB } from './createXDB'
 import { createXDBIndex } from './createXDBIndex'
@@ -30,8 +29,8 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     })
   }
   idbOpenRequest.readyState === 'done'
-  const redoStack = new WeakerSet<XDBObjectStoreAction<I>>()
-  const actionStack = new WeakerSet<XDBObjectStoreAction<I>>()
+  const redoStack = new Set<XDBObjectStoreAction<I>>() // TODO: maxSet size
+  const actionStack = new Set<XDBObjectStoreAction<I>>() // TODO: maxSet size
   const idbTransaction = () => cachelyGetIdbTransaction({ idb, name, transactionMode })
   const idbObjectStore = () => idbTransaction().objectStore(name)
   const index: XDBObjectStore<I>['index'] = (name) => createXDBIndex(idbObjectStore().index(name))
@@ -67,6 +66,7 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
       // clear redo stack
       redoStack.clear()
 
+      console.log('actionStack.size: ', actionStack.size)
       return objectStore.put(item)
     }
     return Boolean(await respondRequestValue(coreAction()))
@@ -80,7 +80,6 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     // record in stack
     !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'setItems', items }))
     return actionResult
-    
   }
 
   const deleteItem: XDBObjectStore<I>['delete'] = async (item, options) => {
@@ -145,7 +144,7 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
   const undo: XDBObjectStore<I>['undo'] = () => {
     const action = [...actionStack.values()].at(-1)
     if (!action) return
-    redoStack.delete(action)
+    actionStack.delete(action)
     if (action.actionType === 'set') {
       deleteItem(action.item, { ignoreRecordInStack: true })
     } else if (action.actionType === 'setItems') {

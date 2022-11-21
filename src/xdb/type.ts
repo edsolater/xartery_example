@@ -1,7 +1,6 @@
 import { SKeyof, Valueof } from '@edsolater/fnkit'
 import { TODO } from '../app/types'
 import { EventCenter } from '../eventCenter/EventCenter'
-import { WeakerSet } from '../neuron/WeakerSet'
 
 export type XDBObjectStoreOptions = {
   name: string
@@ -51,8 +50,8 @@ export type XDBObjectStore<I extends XDBRecordItem = XDBRecordItem> = {
   deleteItems(items: I[], options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
   clear(options?: { ignoreRecordInStack?: boolean }): Promise<boolean>
 
-  _redoActionStack: WeakerSet<XDBObjectStoreAction<I>>
-  _actionStack: WeakerSet<XDBObjectStoreAction<I>>
+  _redoActionStack: Set<XDBObjectStoreAction<I>>
+  _actionStack: Set<XDBObjectStoreAction<I>>
   undo(): void
   redo(): void
   /** @todo more operate methods */

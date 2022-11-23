@@ -1,9 +1,9 @@
 import { AnyFn } from '@edsolater/fnkit'
 
-export interface Subscription<F extends AnyFn | undefined> {
+export interface Subscription{
   unsubscribe(): void
 }
 
-export function Subscription<F extends AnyFn | undefined>(info: { onUnsubscribe(): void }): Subscription<F> {
+export function createSubscription<F extends AnyFn | undefined>(info: { onUnsubscribe(): void }): Subscription {
   return { unsubscribe: info.onUnsubscribe }
 }

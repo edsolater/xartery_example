@@ -1,6 +1,6 @@
 import { AnyFn, capitalize, map, uncapitalize } from '@edsolater/fnkit'
 import { WeakerSet } from '../neuron/WeakerSet'
-import { Subscription } from './Subscription'
+import { createSubscription, Subscription } from './Subscription'
 
 type EventConfig = {
   [eventName: string]: AnyFn
@@ -17,12 +17,12 @@ export type EventCenterOptions = {
 
 export type EventCenter<T extends EventConfig> = {
   emit<N extends keyof T>(eventName: N, parameters: Parameters<T[N]>): void
-  on<U extends Partial<T>>(subscriptionFns: U, options?: EventCenterOptions): { [P in keyof U]: Subscription<U[P]> }
+  on<U extends Partial<T>>(subscriptionFns: U, options?: EventCenterOptions): { [P in keyof U]: Subscription }
 } & {
   [P in keyof T as `on${Capitalize<P & string>}`]: (
     subscriptionFn: (...params: Parameters<T[P]>) => void,
     options?: EventCenterOptions
-  ) => Subscription<(...params: Parameters<T[P]>) => void>
+  ) => Subscription
 }
 
 /**
@@ -86,7 +86,7 @@ export function EventCenter<T extends EventConfig>(
       fn.apply(undefined, prevParamters)
     })
 
-    return Subscription({
+    return createSubscription({
       onUnsubscribe() {
         storedCallbackStore.get(eventName)?.delete(fn)
       }

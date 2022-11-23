@@ -63,10 +63,8 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     const coreAction = () => {
       // record in stack
       !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'set', item }))
-      // clear redo stack
-      redoStack.clear()
-
-      console.log('actionStack.size: ', actionStack.size)
+      !options?.ignoreRecordInStack && redoStack.clear()
+      
       return objectStore.put(item)
     }
     return Boolean(await respondRequestValue(coreAction()))
@@ -79,6 +77,8 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     )
     // record in stack
     !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'setItems', items }))
+    !options?.ignoreRecordInStack && redoStack.clear()
+
     return actionResult
   }
 
@@ -87,6 +87,7 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     const coreLogic = () => {
       // record in stack
       !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'delete', item }))
+      !options?.ignoreRecordInStack && redoStack.clear()
 
       const objectStore = idbObjectStore()
       objectStore.transaction.addEventListener('complete', () => {
@@ -105,6 +106,7 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     )
     // record in stack
     !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'deleteItems', items }))
+    !options?.ignoreRecordInStack && redoStack.clear()
     return actionResult
   }
 
@@ -112,6 +114,7 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     const coreLogic = async () => {
       await getAll().then((items) => {
         !options?.ignoreRecordInStack && actionStack.add(createXDBObjectStoreAction({ actionType: 'clear', items }))
+        !options?.ignoreRecordInStack && redoStack.clear()
       })
 
       const objectStore = idbObjectStore()
@@ -126,8 +129,11 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
 
   const redo: XDBObjectStore<I>['redo'] = () => {
     const action = [...redoStack.values()].at(-1)
+    console.log('action: ', action)
+    console.log('redoStack: ', redoStack)
     if (!action) return
     redoStack.delete(action)
+    actionStack.add(action)
     if (action.actionType === 'set') {
       setItem(action.item, { ignoreRecordInStack: true })
     } else if (action.actionType === 'setItems') {
@@ -145,6 +151,9 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
     const action = [...actionStack.values()].at(-1)
     if (!action) return
     actionStack.delete(action)
+    console.log('add action to redoStack: ', action)
+    redoStack.add(action)
+    console.log('redoStack: ', redoStack)
     if (action.actionType === 'set') {
       deleteItem(action.item, { ignoreRecordInStack: true })
     } else if (action.actionType === 'setItems') {

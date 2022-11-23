@@ -1,4 +1,5 @@
 import { AddProps, componentkit, DivChildNode, DivProps, For, Group } from '@edsolater/uikit'
+import { useConsoleLog } from '../hookit/useConsoleLog'
 
 export type ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
   items: T[]
@@ -39,7 +40,16 @@ export const ItemsListBasic = componentkit(
 
           <Group shadowProps={propofItemGroup} name='list-item-group' icss={{ display: 'grid', gap: 8 }}>
             <For each={items} getKey={(item, idx) => getItemKey({ item, idx })}>
-              {(item) => <AddProps shadowProps={propofItem}>{renderItem({ item })}</AddProps>}
+              {(item) => (
+                <AddProps
+                  // propHook={[(props) => {
+                  //   useConsoleLog({ data: { props } })
+                  // }]}
+                  shadowProps={propofItem}
+                >
+                  {renderItem({ item })}
+                </AddProps>
+              )}
             </For>
           </Group>
         </ComponentRoot>

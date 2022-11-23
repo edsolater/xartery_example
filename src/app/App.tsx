@@ -8,7 +8,7 @@ import { useXDBList } from './dataHooks'
 export function App() {
   useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
 
-  const { todoList, insertTodoItem, deleteTodoItem, clear, undo } = useXDBList()
+  const { todoList, insertTodoItem, deleteTodoItem, clear, undo, redo } = useXDBList()
   useConsoleLog({ data: { todoList }, disabled: true })
 
   return (
@@ -22,13 +22,11 @@ export function App() {
         onDeleteItem={(item) => {
           deleteTodoItem({ item })
         }}
-        onClickClearBtn={() => {
-          clear()
-        }}
-        onUndo={() => {
-          undo()
-        }}
+        onClickClearBtn={clear}
+        onUndo={undo}
+        onRedo={redo}
       />
     </Row>
   )
 }
+

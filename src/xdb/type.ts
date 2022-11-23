@@ -1,6 +1,5 @@
-import { SKeyof, Valueof } from '@edsolater/fnkit'
+import { SKeyof, Valueof, EventCenter } from '@edsolater/fnkit'
 import { TODO } from '../app/types'
-import { EventCenter } from '../eventCenter/EventCenter'
 
 export type XDBObjectStoreOptions = {
   name: string

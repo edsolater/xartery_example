@@ -1,4 +1,4 @@
-import { EventCenter, mergeEventCenterFeature } from '../eventCenter/EventCenter'
+import { EventCenter, mergeEventCenterFeature } from '@edsolater/fnkit'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { createXDB } from './createXDB'
 import { createXDBIndex } from './createXDBIndex'

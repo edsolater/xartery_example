@@ -1,5 +1,4 @@
 import { AddProps, componentkit, DivChildNode, DivProps, For, Group } from '@edsolater/uikit'
-import { useConsoleLog } from '../hookit/useConsoleLog'
 
 export type ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
   items: T[]

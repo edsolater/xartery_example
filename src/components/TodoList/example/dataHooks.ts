@@ -1,7 +1,7 @@
 import { mergeFunction, useAsyncEffect } from '@edsolater/hookit'
 import { RefObject, useRef, useState } from 'react'
-import { getXDBObjectStore } from '../xdb'
-import { XDBObjectStore } from '../xdb/type'
+import { getXDBObjectStore } from '../../../xdb'
+import { XDBObjectStore } from '../../../xdb/type'
 import { initData, TodoListItem } from './dataInitShape'
 
 export const useXDBList = () => {

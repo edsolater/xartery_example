@@ -1,7 +1,7 @@
 import { formatDate } from '@edsolater/fnkit'
 import { componentkit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
 import { click, Kit } from '@edsolater/uikit/plugins'
-import { ItemsListBasic, ItemsListBasicProps } from '../ItemsDisplayer'
+import { ItemsListBasic, ItemsListBasicProps } from './ItemsDisplayer'
 import deleteIconUrl from '/delete.svg'
 
 export type TodoListDisplayerProps<Item extends Record<string, any>> = {

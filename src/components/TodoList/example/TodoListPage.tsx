@@ -4,7 +4,7 @@ import { useXDBList } from './dataHooks'
 
 // should be a `<TodoList>` component
 
-export function TodoListPage() {
+export default function TodoListPage() {
   const { todoList, insertTodoItem, deleteTodoItem, clear, undo, redo } = useXDBList()
 
   return (

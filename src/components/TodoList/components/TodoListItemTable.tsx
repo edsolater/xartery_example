@@ -2,7 +2,6 @@ import { formatDate } from '@edsolater/fnkit'
 import { componentkit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
 import { click, Kit } from '@edsolater/uikit/plugins'
 import { ItemsListBasic, ItemsListBasicProps } from './ItemsDisplayer'
-import deleteIconUrl from '/delete.svg'
 
 export type TodoListDisplayerProps<Item extends Record<string, any>> = {
   items: ItemsListBasicProps<Item>['items']
@@ -68,7 +67,7 @@ export const TodoListItemTable = componentkit(
                         <Div key={idx}>{stringify(v)}</Div>
                       ))}
                       <Icon
-                        src={deleteIconUrl}
+                        src='/delete.svg'
                         icss={{ color: 'crimson' }}
                         plugins={[
                           click(() => onDeleteItem?.(item)),

@@ -1,4 +1,4 @@
-import { EventCenter, mergeEventCenterFeature } from '@edsolater/fnkit'
+import { createEventCenter, mergeEventCenterFeature } from '@edsolater/fnkit'
 import { cachelyGetIdbTransaction } from './cachelyGetIdbTransaction'
 import { createXDB } from './createXDB'
 import { createXDBIndex } from './createXDBIndex'
@@ -170,7 +170,7 @@ export function createXDBObjectStore<I extends XDBRecordItem = XDBRecordItem>({
   const createIndex = (name: string, opts: IDBIndexParameters | undefined): XDBIndex<I> =>
     createXDBIndex<I>(idbObjectStore().createIndex(name, name, opts))
 
-  const eventCenter = EventCenter<XDBObjectStoreEventConfigs<I>>({
+  const eventCenter = createEventCenter<XDBObjectStoreEventConfigs<I>>({
     // changeInitly({ emit }) {
     // const transaction = idbTransaction()
     // transaction.addEventListener('complete', () => {

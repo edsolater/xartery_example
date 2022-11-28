@@ -19,70 +19,73 @@ export type TodoListDisplayerProps<Item extends Record<string, any>> = {
 
 export const TodoListItemTable = componentkit(
   'TodoListItemsDisplayer',
-  (ComponentRoot) =>
-    <Item extends Record<string, any>>({
-      items,
-      layoutType,
-      getItemKey,
-      onDeleteItem,
-      onClickClearBtn,
+  <Item extends Record<string, any>>({
+    items,
+    layoutType,
+    getItemKey,
+    onDeleteItem,
+    onClickClearBtn,
 
-      renderHeader,
-      renderItem,
-      ...props
-    }: TodoListDisplayerProps<Item>) => {
-      const gridICSS: ICSS = { display: 'grid', gap: 12, gridTemplateColumns: `1fr 2fr 48px`, placeItems: 'center' }
-      return (
-        <ComponentRoot>
-          {items.length > 0 ? (
-            <ItemsListBasic
-              {...props}
-              items={items}
-              getItemKey={getItemKey ?? (({ item, idx }) => item.id ?? idx)}
-              renderHeader={
-                renderHeader ??
-                (({ firstItem }) => {
-                  if (!firstItem) return null
-                  const itemValues = Object.keys(firstItem)
-                  return (
-                    <Div icss={gridICSS}>
-                      {itemValues.map((v, idx) => (
-                        <Div key={idx} icss={{ marginBlock: 4, fontSize: 18, fontWeight: 'bold' }}>
-                          {stringify(v)}
-                        </Div>
-                      ))}
+    renderHeader,
+    renderItem,
+    ...props
+  }: TodoListDisplayerProps<Item>) => {
+    const gridICSS: ICSS = { display: 'grid', gap: 12, gridTemplateColumns: `1fr 2fr 48px`, placeItems: 'center' }
+    return (
+      <Div>
+        {items.length > 0 ? (
+          <ItemsListBasic
+            {...props}
+            items={items}
+            getItemKey={getItemKey ?? (({ item, idx }) => item.id ?? idx)}
+            renderHeader={
+              renderHeader ??
+              (({ firstItem }) => {
+                if (!firstItem) return null
+                const itemValues = Object.keys(firstItem)
+                return (
+                  <Div icss={gridICSS}>
+                    {itemValues.map((v, idx) => (
+                      <Div key={idx} icss={{ marginBlock: 4, fontSize: 18, fontWeight: 'bold' }}>
+                        {stringify(v)}
+                      </Div>
+                    ))}
 
-                      <Div plugins={click(() => onClickClearBtn?.())}> Clear </Div>
-                    </Div>
-                  )
-                })
-              }
-              renderItem={
-                renderItem ??
-                (({ item }) => {
-                  const itemValues = Object.values(item)
-                  return (
-                    <Div icss={gridICSS}>
-                      {itemValues.map((v, idx) => (
-                        <Div key={idx}>{stringify(v)}</Div>
-                      ))}
-                      <Icon
-                        src='/delete.svg'
-                        icss={{ color: 'crimson' }}
-                        plugins={[
-                          click(() => onDeleteItem?.(item)),
-                          Kit((self) => <Tooltip placement='right' renderButton={self}>delete</Tooltip>)
-                        ]}
-                      />
-                    </Div>
-                  )
-                })
-              }
-            />
-          ) : null}
-        </ComponentRoot>
-      )
-    }
+                    <Div plugins={click(() => onClickClearBtn?.())}> Clear </Div>
+                  </Div>
+                )
+              })
+            }
+            renderItem={
+              renderItem ??
+              (({ item }) => {
+                const itemValues = Object.values(item)
+                return (
+                  <Div icss={gridICSS}>
+                    {itemValues.map((v, idx) => (
+                      <Div key={idx}>{stringify(v)}</Div>
+                    ))}
+                    <Icon
+                      src='/delete.svg'
+                      icss={{ color: 'crimson' }}
+                      plugins={[
+                        click(() => onDeleteItem?.(item)),
+                        Kit((self) => (
+                          <Tooltip placement='right' renderButton={self}>
+                            delete
+                          </Tooltip>
+                        ))
+                      ]}
+                    />
+                  </Div>
+                )
+              })
+            }
+          />
+        ) : null}
+      </Div>
+    )
+  }
 )
 
 function stringify(value: any): string {

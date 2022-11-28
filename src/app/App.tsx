@@ -1,8 +1,7 @@
 import { AppRoot, componentkit, Div, For, Icon, Row } from '@edsolater/uikit'
 import { useGlobalState } from '@edsolater/uikit/hooks'
 import { lazy, Suspense } from 'react'
-import TodoListPage from '../components/TodoList/example/TodoListPage'
-import { sideMenu, SideMenuEntryItem } from './configs/sideMenu'
+import { sideMenu } from './configs/sideMenu'
 
 export function App() {
   return (
@@ -18,10 +17,10 @@ export function useGlobalEntries() {
   return { activeEntryItem, setActiveEntryItem, entries: sideMenu.entries, sideMenuConfig: sideMenu }
 }
 
-export const EntriesBar = componentkit('EntriesBar', (ComponentRoot) => () => {
+export const EntriesBar = componentkit('EntriesBar', () => {
   const { activeEntryItem, setActiveEntryItem } = useGlobalEntries()
   return (
-    <ComponentRoot icss={{ border: '1px solid black' }}>
+    <Div icss={{ border: '1px solid black' }}>
       <For each={sideMenu.entries} getKey={(entry) => entry.name}>
         {(entry) => (
           <Row>
@@ -36,22 +35,22 @@ export const EntriesBar = componentkit('EntriesBar', (ComponentRoot) => () => {
           </Row>
         )}
       </For>
-    </ComponentRoot>
+    </Div>
   )
 })
 
 export type ConcentSectionProps = {}
 
-export const MainContentArea = componentkit('ConcentSection', (ComponentRoot) => ({}: ConcentSectionProps) => {
+export const MainContentArea = componentkit('ConcentSection', ({}: ConcentSectionProps) => {
   const { activeEntryItem } = useGlobalEntries()
-  const ContentComponent = activeEntryItem && lazy(() => import(activeEntryItem.componentPath))
+  const ContentComponent = activeEntryItem && lazy(() => import(/* @vite-ignore */ activeEntryItem.componentPath))
   return (
-    <ComponentRoot>
+    <Div>
       {ContentComponent ? (
         <Suspense fallback='loading'>
           <ContentComponent />
         </Suspense>
       ) : null}
-    </ComponentRoot>
+    </Div>
   )
 })

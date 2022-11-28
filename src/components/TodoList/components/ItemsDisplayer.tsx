@@ -1,4 +1,4 @@
-import { AddProps, componentkit, DivChildNode, DivProps, For, Group } from '@edsolater/uikit'
+import { AddProps, componentkit, Div, DivChildNode, DivProps, For, Group } from '@edsolater/uikit'
 
 export type ItemsListBasicProps<T extends Record<string, any> = Record<string, any>> = {
   items: T[]
@@ -19,7 +19,6 @@ export type ItemsListBasicProps<T extends Record<string, any> = Record<string, a
 /** basic  */
 export const ItemsListBasic = componentkit(
   'ItemsListBasic',
-  (ComponentRoot) =>
     <T extends Record<string, any>>({
       items,
       getItemKey,
@@ -32,7 +31,7 @@ export const ItemsListBasic = componentkit(
       propofItemGroup
     }: ItemsListBasicProps<T>) =>
       (
-        <ComponentRoot icss={{ border: '1px solid', padding: 4 }}>
+        <Div icss={{ border: '1px solid', padding: 4 }}>
           <Group shadowProps={propofHeaderGroup} name='list-header'>
             <AddProps shadowProps={propofHeader}>{renderHeader({ items: items, firstItem: items.at(0) })}</AddProps>
           </Group>
@@ -51,6 +50,6 @@ export const ItemsListBasic = componentkit(
               )}
             </For>
           </Group>
-        </ComponentRoot>
+        </Div>
       )
 )

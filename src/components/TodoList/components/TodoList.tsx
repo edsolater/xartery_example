@@ -11,7 +11,6 @@ export type TodoListProps<T extends Record<string, any>> = {
 
 export const TodoList = componentkit(
   'TodoList',
-  (ComponentRoot) =>
     <T extends Record<string, any>>({ onInsert, onUndo, onRedo, ...props }: TodoListProps<T>) => {
       const [newTodoTitle, setNewTodoTitle] = useState<string>()
       const uploadNewTodoItem = () => {
@@ -20,7 +19,7 @@ export const TodoList = componentkit(
         setNewTodoTitle(undefined)
       }
       return (
-        <ComponentRoot>
+        <Div>
           <Div
             icss={{
               width: 'min-content',
@@ -44,7 +43,7 @@ export const TodoList = componentkit(
 
             <TodoListItemTable {...props} />
           </Div>
-        </ComponentRoot>
+        </Div>
       )
     }
 )

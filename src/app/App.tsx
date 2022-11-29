@@ -1,26 +1,28 @@
-import { AppRoot, componentkit, Div, For, Icon, Row } from '@edsolater/uikit'
+import { componentKit, renamedKit, Div, For, Icon, Row } from '@edsolater/uikit'
 import { useGlobalState } from '@edsolater/uikit/hooks'
 import { lazy, Suspense } from 'react'
 import { sideMenu } from './configs/sideMenu'
 
 export function App() {
   return (
-    <AppRoot>
+    <Root>
       <EntriesBar />
       <MainContentArea />
-    </AppRoot>
+    </Root>
   )
 }
+
+export const Root = renamedKit('Root', Div, { icss: { display: 'grid', gridTemplateColumns: '300px 1fr' } })
 
 export function useGlobalEntries() {
   const [activeEntryItem, setActiveEntryItem] = useGlobalState('activeTabName', sideMenu.entries[0])
   return { activeEntryItem, setActiveEntryItem, entries: sideMenu.entries, sideMenuConfig: sideMenu }
 }
 
-export const EntriesBar = componentkit('EntriesBar', () => {
+export const EntriesBar = componentKit('EntriesBar', () => {
   const { activeEntryItem, setActiveEntryItem } = useGlobalEntries()
   return (
-    <Div icss={{ border: '1px solid black' }}>
+    <Div icss={{ background: 'dodgerblue' }}>
       <For each={sideMenu.entries} getKey={(entry) => entry.name}>
         {(entry) => (
           <Row>
@@ -41,7 +43,7 @@ export const EntriesBar = componentkit('EntriesBar', () => {
 
 export type ConcentSectionProps = {}
 
-export const MainContentArea = componentkit('ConcentSection', ({}: ConcentSectionProps) => {
+export const MainContentArea = componentKit('ConcentSection', ({}: ConcentSectionProps) => {
   const { activeEntryItem } = useGlobalEntries()
   const ContentComponent = activeEntryItem && lazy(() => import(/* @vite-ignore */ activeEntryItem.componentPath))
   return (

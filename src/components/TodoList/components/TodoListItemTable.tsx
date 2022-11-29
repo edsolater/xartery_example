@@ -1,5 +1,5 @@
 import { formatDate } from '@edsolater/fnkit'
-import { componentkit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
+import { componentKit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
 import { click, Kit } from '@edsolater/uikit/plugins'
 import { ItemsListBasic, ItemsListBasicProps } from './ItemsDisplayer'
 
@@ -17,7 +17,7 @@ export type TodoListDisplayerProps<Item extends Record<string, any>> = {
 >
 /** just basic layout  */
 
-export const TodoListItemTable = componentkit(
+export const TodoListItemTable = componentKit(
   'TodoListItemsDisplayer',
   <Item extends Record<string, any>>({
     items,

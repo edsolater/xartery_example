@@ -1,5 +1,5 @@
 import { Button, componentKit, Div, Input, Row } from '@edsolater/uikit'
-import { click, keyboardShortcut } from '@edsolater/uikit/plugins'
+import { keyboardShortcut } from '@edsolater/uikit/plugins'
 import { useState } from 'react'
 import { TodoListDisplayerProps, TodoListItemTable } from './TodoListItemTable'
 
@@ -22,7 +22,6 @@ export const TodoList = componentKit(
         <Div>
           <Div
             icss={{
-              width: 'min-content',
               display: 'grid',
               justifyItems: 'center',
               gap: 8,

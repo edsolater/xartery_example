@@ -1,7 +1,7 @@
-import { formatDate } from '@edsolater/fnkit'
-import { componentKit, Div, Icon, ICSS, Tooltip } from '@edsolater/uikit'
+import { componentKit, Div, For, Icon, ICSS, Tooltip } from '@edsolater/uikit'
 import { click, Kit } from '@edsolater/uikit/plugins'
 import { ItemsListBasic, ItemsListBasicProps } from './ItemsDisplayer'
+import { stringify } from '../../../utils/stringify'
 
 export type TodoListDisplayerProps<Item extends Record<string, any>> = {
   items: ItemsListBasicProps<Item>['items']
@@ -30,7 +30,7 @@ export const TodoListItemTable = componentKit(
     renderItem,
     ...props
   }: TodoListDisplayerProps<Item>) => {
-    const gridICSS: ICSS = { display: 'grid', gap: 12, gridTemplateColumns: `1fr 2fr 48px`, placeItems: 'center' }
+    const gridICSS: ICSS = { display: 'grid', gap: 24, gridTemplateColumns: `1fr 2fr 48px` }
     return (
       <Div>
         {items.length > 0 ? (
@@ -40,46 +40,37 @@ export const TodoListItemTable = componentKit(
             getItemKey={getItemKey ?? (({ item, idx }) => item.id ?? idx)}
             renderHeader={
               renderHeader ??
-              (({ firstItem }) => {
-                if (!firstItem) return null
-                const itemValues = Object.keys(firstItem)
-                return (
+              (({ firstItem }) =>
+                firstItem && (
                   <Div icss={gridICSS}>
-                    {itemValues.map((v, idx) => (
-                      <Div key={idx} icss={{ marginBlock: 4, fontSize: 18, fontWeight: 'bold' }}>
-                        {stringify(v)}
-                      </Div>
-                    ))}
-
+                    <For each={Object.keys(firstItem)} getKey={(_, idx) => idx}>
+                      {(v) => <Div icss={{ marginBlock: 4, fontSize: 18, fontWeight: 'bold' }}>{stringify(v)}</Div>}
+                    </For>
                     <Div plugins={click(() => onClickClearBtn?.())}> Clear </Div>
                   </Div>
-                )
-              })
+                ))
             }
             renderItem={
               renderItem ??
-              (({ item }) => {
-                const itemValues = Object.values(item)
-                return (
-                  <Div icss={gridICSS}>
-                    {itemValues.map((v, idx) => (
-                      <Div key={idx}>{stringify(v)}</Div>
-                    ))}
-                    <Icon
-                      src='/delete.svg'
-                      icss={{ color: 'crimson' }}
-                      plugins={[
-                        click(() => onDeleteItem?.(item)),
-                        Kit((self) => (
-                          <Tooltip placement='right' renderButton={self}>
-                            delete
-                          </Tooltip>
-                        ))
-                      ]}
-                    />
-                  </Div>
-                )
-              })
+              (({ item }) => (
+                <Div icss={gridICSS}>
+                  <For each={Object.values(item)} getKey={(_, idx) => idx}>
+                    {(v) => <Div>{stringify(v)}</Div>}
+                  </For>
+                  <Icon
+                    src='/delete.svg'
+                    icss={{ color: 'crimson' }}
+                    plugins={[
+                      click(() => onDeleteItem?.(item)),
+                      Kit((self) => (
+                        <Tooltip placement='right' renderButton={self}>
+                          delete
+                        </Tooltip>
+                      ))
+                    ]}
+                  />
+                </Div>
+              ))
             }
           />
         ) : null}
@@ -87,8 +78,3 @@ export const TodoListItemTable = componentKit(
     )
   }
 )
-
-function stringify(value: any): string {
-  if (value instanceof Date) return formatDate(value, 'YYYY-MM-DD HH:mm:ss')
-  return String(value)
-}

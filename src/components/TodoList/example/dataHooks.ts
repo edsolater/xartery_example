@@ -63,7 +63,6 @@ export const useXDBList = () => {
 
   return {
     todoList,
-
     insertTodoItem: insertTodoItem,
     deleteTodoItem: deleteTodoItem,
     clear: clearItems,

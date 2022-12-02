@@ -3,13 +3,16 @@ import { AppRoot, componentKit, Div, For, Icon, renamedKit, Row, Text } from '@e
 import { useGlobalState } from '@edsolater/uikit/hooks'
 import { lazy, Suspense } from 'react'
 import { sideMenu } from './configs/sideMenu'
+import { LightThemeProvider } from './theme/ThemeProvider'
 
 export function App() {
   return (
-    <Root>
-      <EntriesBar />
-      <MainContentArea />
-    </Root>
+    <LightThemeProvider>
+      <Root>
+        <EntriesBar />
+        <MainContentArea />
+      </Root>
+    </LightThemeProvider>
   )
 }
 
@@ -23,13 +26,13 @@ export function useGlobalEntries() {
 export const EntriesBar = componentKit('EntriesBar', () => {
   const { activeEntryItem, setActiveEntryItem } = useGlobalEntries()
   return (
-    <Div icss={{ background: 'dodgerblue' }}>
+    <Div>
       <For each={sideMenu.entries} getKey={pickProperty('name')}>
         {(entry) => (
           <Row>
             <Icon
               src={entry.iconPath}
-              cssColor={activeEntryItem?.name === entry.name ? 'crimson' : 'dodgerblue'}
+              cssColor={activeEntryItem?.name === entry.name ? 'cornflowerblue' : 'dodgerblue'}
               onClick={() => {
                 setActiveEntryItem(entry)
               }}

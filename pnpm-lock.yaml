@@ -5,9 +5,11 @@ specifiers:
   '@edsolater/fnkit': ^0.1.10
   '@edsolater/hookit': ^0.1.11
   '@edsolater/uikit': ^0.1.13
+  '@edsolater/xstore': ^0.1.9
   '@types/react': ^18.0.25
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^2.2.0
+  immer: ^9.0.16
   react: ^18.2.0
   react-dom: ^18.2.0
   rxjs: ^7.5.7
@@ -18,7 +20,9 @@ dependencies:
   '@babel/core': 7.20.2
   '@edsolater/fnkit': 0.1.10
   '@edsolater/hookit': 0.1.11_ntb6fqh42gqqrxtm7j3ckupuz4
-  '@edsolater/uikit': 0.1.13_3sbkiyydmaqmwt7r4l4corpkfa
+  '@edsolater/uikit': 0.1.13_v5voqkh4nqrrpmq7gsipbfssx4
+  '@edsolater/xstore': 0.1.9_ntb6fqh42gqqrxtm7j3ckupuz4
+  immer: 9.0.16
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   rxjs: 7.5.7
@@ -296,12 +300,13 @@ packages:
       react: 18.2.0
     dev: false
 
-  /@edsolater/uikit/0.1.13_3sbkiyydmaqmwt7r4l4corpkfa:
+  /@edsolater/uikit/0.1.13_v5voqkh4nqrrpmq7gsipbfssx4:
     resolution: {integrity: sha512-BTVeI812PCKE/R0KYNUBqEUvK9iZUKBvXJsI8zswDydGvxWMnl0wD3XNGQ7KRE59tsYrguxeSc10H6szayNbsQ==}
     peerDependencies:
       '@babel/core': '>7.0.0'
       '@edsolater/fnkit': '*'
       '@edsolater/hookit': '*'
+      '@edsolater/xstore': '*'
       react: '>18.0.0'
       react-dom: '>18.0.0'
     dependencies:

@@ -1,30 +1,47 @@
 import { pickProperty } from '@edsolater/fnkit'
-import { AppRoot, componentKit, Div, For, Icon, renamedKit, Row, Text } from '@edsolater/uikit'
+import { AppRoot, Button, componentKit, Div, For, Icon, Row, Text } from '@edsolater/uikit'
 import { useGlobalState } from '@edsolater/uikit/hooks'
 import { lazy, Suspense } from 'react'
 import { sideMenu } from './configs/sideMenu'
-import { LightThemeProvider } from './theme/ThemeProvider'
+import { LightThemeProvider, useTheme } from './theme/ThemeProvider'
 
 export function App() {
   return (
     <LightThemeProvider>
-      <Root>
-        <EntriesBar />
+      <AppRoot icss={{ display: 'grid', gridTemplateColumns: '300px 1fr' }}>
+        <TopNavBar />
+        <SideMenuBar />
         <MainContentArea />
-      </Root>
+      </AppRoot>
     </LightThemeProvider>
   )
 }
-
-export const Root = renamedKit('Root', AppRoot, { icss: { display: 'grid', gridTemplateColumns: '300px 1fr' } })
 
 export function useGlobalEntries() {
   const [activeEntryItem, setActiveEntryItem] = useGlobalState('activeTabName', sideMenu.entries[0])
   return { activeEntryItem, setActiveEntryItem, entries: sideMenu.entries, sideMenuConfig: sideMenu }
 }
 
-export const EntriesBar = componentKit('EntriesBar', () => {
+export const TopNavBar = componentKit('EntriesBar', () => {
+  const { contextComponentProps, contextComponentSet } = useTheme()
+  console.log('theme: ', contextComponentProps, contextComponentSet)
+  return (
+    <Div>
+      <Button
+        onClick={() =>
+          contextComponentSet?.((theme) => {
+            theme.colors.white = 'dodgerblue'
+          })
+        }
+      ></Button>
+    </Div>
+  )
+})
+
+export const SideMenuBar = componentKit('EntriesBar', () => {
   const { activeEntryItem, setActiveEntryItem } = useGlobalEntries()
+  const theme = useTheme()
+  console.log('theme: ', theme)
   return (
     <Div>
       <For each={sideMenu.entries} getKey={pickProperty('name')}>

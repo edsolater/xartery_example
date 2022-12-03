@@ -1,7 +1,7 @@
 import { createComponentContext, addDefaultProps } from '@edsolater/uikit'
 export type ThemeProviderProps = {
-  colors?: {
-    white: '#fff'
+  colors: {
+    white: string
   }
 }
 

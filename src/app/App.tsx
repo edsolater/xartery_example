@@ -1,19 +1,29 @@
 import { pickProperty } from '@edsolater/fnkit'
-import { AppRoot, Button, componentKit, Div, For, Icon, Row, Text } from '@edsolater/uikit'
+import { AppRoot, Button, componentKit, Div, For, Icon, Row, Text, UncontrolledSwitch } from '@edsolater/uikit'
 import { useGlobalState } from '@edsolater/uikit/hooks'
 import { lazy, Suspense } from 'react'
 import { sideMenu } from './configs/sideMenu'
-import { LightThemeProvider, useTheme } from './theme/ThemeProvider'
+import { defaultTheme } from './theme/defaultTheme'
+import { lightTheme } from './theme/lightTheme'
+import { ThemeProvider, useTheme } from './theme/ThemeProvider'
 
 export function App() {
   return (
-    <LightThemeProvider>
-      <AppRoot icss={{ display: 'grid', gridTemplateColumns: '300px 1fr' }}>
-        <TopNavBar />
-        <SideMenuBar />
-        <MainContentArea />
+    <ThemeProvider theme={lightTheme}>
+      <AppRoot
+        icss={{
+          display: 'grid',
+          gridTemplateColumns: '300px 1fr',
+          gridTemplate: `
+            "nav  nav" 48px
+            "side con" 40px / 20% 1fr`
+        }}
+      >
+        <TopNavBar icss={{ gridArea: 'nav' }} />
+        <SideMenuBar icss={{ gridArea: 'side' }} />
+        <MainContentArea icss={{ gridArea: 'con' }} />
       </AppRoot>
-    </LightThemeProvider>
+    </ThemeProvider>
   )
 }
 
@@ -22,19 +32,14 @@ export function useGlobalEntries() {
   return { activeEntryItem, setActiveEntryItem, entries: sideMenu.entries, sideMenuConfig: sideMenu }
 }
 
-export const TopNavBar = componentKit('EntriesBar', () => {
-  const { contextComponentProps, contextComponentSet } = useTheme()
-  console.log('theme: ', contextComponentProps, contextComponentSet)
+export const TopNavBar = componentKit('TopNavBar', () => {
+  const { value: theme, set: setTheme } = useTheme()
   return (
-    <Div>
-      <Button
-        onClick={() =>
-          contextComponentSet?.((theme) => {
-            theme.colors.white = 'dodgerblue'
-          })
-        }
-      ></Button>
-    </Div>
+    <Row icss={{ backgroundColor: theme?.colors.navBarBg, justifyContent: 'end', gap:16 }}>
+      <UncontrolledSwitch />
+      <Button onClick={() => setTheme?.(lightTheme)}>Light Theme</Button>
+      <Button onClick={() => setTheme?.(defaultTheme)}>Default Theme</Button>
+    </Row>
   )
 })
 
@@ -62,9 +67,7 @@ export const SideMenuBar = componentKit('EntriesBar', () => {
   )
 })
 
-export type ConcentSectionProps = {}
-
-export const MainContentArea = componentKit('ConcentSection', ({}: ConcentSectionProps) => {
+export const MainContentArea = componentKit('ConcentSection', () => {
   const { activeEntryItem } = useGlobalEntries()
   const ContentComponent = activeEntryItem && lazy(() => import(/* @vite-ignore */ activeEntryItem.componentPath))
   return (

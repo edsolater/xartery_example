@@ -1,7 +1,21 @@
 import { pickProperty } from '@edsolater/fnkit'
-import { AppRoot, Button, componentKit, Div, For, Icon, Row, Text, UncontrolledSwitch } from '@edsolater/uikit'
+import {
+  AddProps,
+  AppRoot,
+  Button,
+  componentKit,
+  Div,
+  DivChildNode,
+  For,
+  Grid,
+  Icon,
+  Row,
+  Text,
+  uikit,
+  UncontrolledSwitch
+} from '@edsolater/uikit'
 import { useGlobalState } from '@edsolater/uikit/hooks'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react'
 import { sideMenu } from './configs/sideMenu'
 import { defaultTheme } from './theme/defaultTheme'
 import { lightTheme } from './theme/lightTheme'
@@ -34,14 +48,65 @@ export function useGlobalEntries() {
 
 export const TopNavBar = componentKit('TopNavBar', () => {
   const { value: theme, set: setTheme } = useTheme()
+  const [flag, setFlag] = useState(false)
   return (
-    <Row icss={{ backgroundColor: theme?.colors.navBarBg, justifyContent: 'end', gap:16 }}>
-      <UncontrolledSwitch />
+    <Row icss={{ backgroundColor: theme?.colors.navBarBg, justifyContent: 'end', gap: 16 }}>
+      <UncontrolledSwitch defaultCheck={flag} onToggle={setFlag} />
+      <Grid icss={{ width: 200, border: '1px solid black', justifyContent: flag ? 'end' : 'start' }}>
+        <Motion>
+          <Div icss={{ width: 40, height: 40, background: 'dodgerblue' }}></Div>
+        </Motion>
+      </Grid>
       <Button onClick={() => setTheme?.(lightTheme)}>Light Theme</Button>
       <Button onClick={() => setTheme?.(defaultTheme)}>Default Theme</Button>
     </Row>
   )
 })
+export interface MotionProps {
+  children?: DivChildNode
+}
+
+export const Motion = uikit('Motion', ({ children }: MotionProps) => {
+  const squareRef = useRef<HTMLElement>()
+  const initialPositionRef = useRef<{ x: number; y: number }>()
+
+  const cachedAnimation = useRef<Animation>()
+
+  useLayoutEffect(() => {
+    // so css change must cause rerender by React, so useLayoutEffect can do something before change attach to DOM
+    if (!squareRef.current) return
+
+    const box = squareRef.current.getBoundingClientRect()
+    if (initialPositionRef.current && box && moved(initialPositionRef.current, box)) {
+      // stop prev animation
+      cachedAnimation.current?.cancel()
+
+      // get the difference in position
+      const deltaX = box.x - initialPositionRef.current.x
+
+      // animate back to the final position
+      const animationControl = squareRef.current.animate(
+        [{ transform: `translate(${-deltaX}px)` }, { transform: '', offset: 1 }],
+        { duration: 300, iterations: 1 } // iteration 1 can use to moke transition
+      )
+
+      // React store the controller
+      cachedAnimation.current = animationControl
+    }
+
+    initialPositionRef.current = box
+  })
+
+  return <AddProps domRef={squareRef}>{children}</AddProps>
+})
+
+const moved = (initialBox: { x: number; y: number } | undefined, finalBox: { x: number; y: number } | undefined) => {
+  // we just mounted, so we don't have complete data yet
+  if (!initialBox || !finalBox) return false
+  const xMoved = initialBox.x !== finalBox.x
+  const yMoved = initialBox.y !== finalBox.y
+  return xMoved || yMoved
+}
 
 export const SideMenuBar = componentKit('EntriesBar', () => {
   const { activeEntryItem, setActiveEntryItem } = useGlobalEntries()

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { MatureTodoList } from '../../components/TodoList/example/TodoListPage'
+import { MatureTodoList } from '../components/TodoList/example/MatureTodoList'
 
 export type SideMenuEntryItem = {
   name: string

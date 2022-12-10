@@ -1,21 +1,8 @@
 import { pickProperty } from '@edsolater/fnkit'
-import {
-  AddProps,
-  AppRoot,
-  Button,
-  componentKit,
-  Div,
-  DivChildNode,
-  For,
-  Grid,
-  Icon,
-  Row,
-  Text,
-  uikit,
-  UncontrolledSwitch
-} from '@edsolater/uikit'
+import { AppRoot, Button, componentKit, Div, For, Grid, Icon, Motion, Row, Switch, Text } from '@edsolater/uikit'
 import { useGlobalState } from '@edsolater/uikit/hooks'
-import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react'
+import { WrappedByKit } from '@edsolater/uikit/plugins'
+import { lazy, Suspense, useState } from 'react'
 import { sideMenu } from './configs/sideMenu'
 import { defaultTheme } from './theme/defaultTheme'
 import { lightTheme } from './theme/lightTheme'
@@ -51,68 +38,18 @@ export const TopNavBar = componentKit('TopNavBar', () => {
   const [flag, setFlag] = useState(false)
   return (
     <Row icss={{ backgroundColor: theme?.colors.navBarBg, justifyContent: 'end', gap: 16 }}>
-      <UncontrolledSwitch defaultCheck={flag} onToggle={setFlag} />
+      <Row>
+        <Div>Default Theme</Div>
+        <Switch defaultCheck={flag} onToggle={(open) => (open ? setTheme(defaultTheme) : setTheme(lightTheme))} />
+      </Row>
       <Grid icss={{ width: 200, border: '1px solid black', justifyContent: flag ? 'end' : 'start' }}>
-        <Motion>
-          <Div icss={{ width: 40, height: 40, background: 'dodgerblue' }}></Div>
-        </Motion>
+        <Div plugins={WrappedByKit(Motion)} icss={{ width: 40, height: 40, background: 'dodgerblue' }}></Div>
       </Grid>
       <Button onClick={() => setTheme?.(lightTheme)}>Light Theme</Button>
       <Button onClick={() => setTheme?.(defaultTheme)}>Default Theme</Button>
     </Row>
   )
 })
-export interface MotionProps {
-  children?: DivChildNode
-}
-
-function calcDeltaTrasformCSS(from: DOMRect, to: DOMRect) {
-  // get the difference in position
-  const deltaX = to.x - from.x
-  return `translate(${-deltaX}px)`
-}
-export const Motion = uikit('Motion', ({ children }: MotionProps) => {
-  const squareRef = useRef<HTMLElement>()
-  const fromRect = useRef<DOMRect>()
-  useLayoutEffect(() => {
-    // so css change must cause rerender by React, so useLayoutEffect can do something before change attach to DOM
-    if (!squareRef.current) return
-
-    const toRect = squareRef.current.getBoundingClientRect()
-
-    let animationControl: Animation | undefined
-    if (fromRect.current && toRect && hasRectChanged(fromRect.current, toRect)) {
-      animationControl = squareRef.current.animate(
-        [{ transform: calcDeltaTrasformCSS(fromRect.current, toRect) }, { transform: '', offset: 1 }],
-        { duration: 300, iterations: 1 , easing:'ease'} // iteration 1 can use to moke transition
-      )
-    }
-
-    return () => {
-      if (animationControl?.playState === 'finished') {
-        // record for next frame
-        fromRect.current = toRect
-      } else {
-        // record for next frame
-        fromRect.current = squareRef.current?.getBoundingClientRect()
-        animationControl?.cancel()
-      }
-    }
-  })
-
-  return <AddProps domRef={squareRef}>{children}</AddProps>
-})
-
-const hasRectChanged = (
-  initialBox: { x: number; y: number } | undefined,
-  finalBox: { x: number; y: number } | undefined
-) => {
-  // we just mounted, so we don't have complete data yet
-  if (!initialBox || !finalBox) return false
-  const xMoved = initialBox.x !== finalBox.x
-  const yMoved = initialBox.y !== finalBox.y
-  return xMoved || yMoved
-}
 
 export const SideMenuBar = componentKit('EntriesBar', () => {
   const { activeEntryItem, setActiveEntryItem } = useGlobalEntries()
@@ -120,7 +57,7 @@ export const SideMenuBar = componentKit('EntriesBar', () => {
   console.log('theme: ', theme)
   return (
     <Div>
-      <For each={sideMenu.entries} getKey={pickProperty('name')}>
+      <For each={sideMenu.entries} getKey={(i) => i.name}>
         {(entry) => (
           <Row>
             <Icon
@@ -140,14 +77,5 @@ export const SideMenuBar = componentKit('EntriesBar', () => {
 
 export const MainContentArea = componentKit('ConcentSection', () => {
   const { activeEntryItem } = useGlobalEntries()
-  const ContentComponent = activeEntryItem && lazy(() => import(/* @vite-ignore */ activeEntryItem.componentPath))
-  return (
-    <Div>
-      {ContentComponent ? (
-        <Suspense fallback='loading'>
-          <ContentComponent />
-        </Suspense>
-      ) : null}
-    </Div>
-  )
+  return <Div>{activeEntryItem.component()}</Div>
 })

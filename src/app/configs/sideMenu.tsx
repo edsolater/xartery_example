@@ -1,7 +1,10 @@
+import { ReactNode } from 'react'
+import { MatureTodoList } from '../../components/TodoList/example/TodoListPage'
+
 export type SideMenuEntryItem = {
   name: string
   iconPath: string
-  componentPath: string
+  component: () => ReactNode
 }
 
 export type SideMenuEntries = {
@@ -13,7 +16,7 @@ export const sideMenu = {
     {
       name: 'TodoList',
       iconPath: '/todo_list.svg',
-      componentPath: '../components/TodoList/example/TodoListPage.tsx'
+      component: () => <MatureTodoList />
     }
   ]
 } as SideMenuEntries

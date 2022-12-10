@@ -5,6 +5,5 @@
   "tabWidth": 2,
   "trailingComma": "none",
   "quoteProps": "preserve",
-  "jsxSingleQuote": true,
-  "arrowParens": "always"
+  "jsxSingleQuote": true
 }

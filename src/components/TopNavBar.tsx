@@ -1,5 +1,5 @@
 import { Button, componentKit, Div, Grid, Motion, Row, Switch } from '@edsolater/uikit';
-import { WrappedByKit } from '@edsolater/uikit/plugins';
+import { WrappedBy } from '@edsolater/uikit/plugins';
 import { useState } from 'react';
 import { defaultTheme } from '../theme/defaultTheme';
 import { lightTheme } from '../theme/lightTheme';
@@ -16,7 +16,7 @@ export const TopNavBar = componentKit('TopNavBar', () => {
         <Switch defaultCheck={flag} onToggle={(open) => (open ? setTheme(defaultTheme) : setTheme(lightTheme))} />
       </Row>
       <Grid icss={{ width: 200, border: '1px solid black', justifyContent: flag ? 'end' : 'start' }}>
-        <Div plugins={WrappedByKit(Motion)} icss={{ width: 40, height: 40, background: 'dodgerblue' }}></Div>
+        <Div plugins={WrappedBy(Motion)} icss={{ width: 40, height: 40, background: 'dodgerblue' }}></Div>
       </Grid>
       <Button onClick={() => setTheme?.(lightTheme)}>Light Theme</Button>
       <Button onClick={() => setTheme?.(defaultTheme)}>Default Theme</Button>

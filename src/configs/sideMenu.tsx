@@ -16,16 +16,16 @@ export type SideMenuEntries = {
 export const sideMenu = {
   entries: [
     {
-      group: 'Examples',
-      name: 'TodoList',
-      iconPath: '/todo_list.svg',
-      component: () => <MatureTodoList />
-    },
-    {
       group: 'Playground',
       name: 'motion grid',
       iconPath: '/todo_list.svg',
       component: () => <MotionGrid />
+    },
+    {
+      group: 'Examples',
+      name: 'TodoList',
+      iconPath: '/todo_list.svg',
+      component: () => <MatureTodoList />
     }
   ]
 } as SideMenuEntries

@@ -2,7 +2,7 @@ import { addItem, loopSelf } from '@edsolater/fnkit'
 import { Button, Col, componentKit, Div, For, Grid, Group, Motion } from '@edsolater/uikit'
 import { WrappedBy } from '@edsolater/uikit/plugins'
 import { useState } from 'react'
-import { TabExample } from './tabs'
+import { Tab } from './tabs'
 
 export type MotionGridProps = {}
 
@@ -28,7 +28,7 @@ export const MotionGrid = componentKit('MotionGrid', () => {
       </Grid>
 
       {/* TODO temp for dev */}
-      <TabExample tabs={[{ value: 'hello' }, {value: 'world'}, {value: 'hahaha'}, {value: 'hehehe'}]}></TabExample>
+      <Tab tabs={[{ value: 'hello' }, {value: 'world'}, {value: 'hahaha'}, {value: 'hehehe'}]}></Tab>
     </Col>
   )
 })

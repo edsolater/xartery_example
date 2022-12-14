@@ -1,14 +1,14 @@
-import { Button, componentKit, Div, Grid, Motion, Row, Switch } from '@edsolater/uikit';
-import { WrappedBy } from '@edsolater/uikit/plugins';
-import { useState } from 'react';
-import { defaultTheme } from '../theme/defaultTheme';
-import { lightTheme } from '../theme/lightTheme';
-import { useTheme } from '../theme/ThemeProvider';
-
+import { Button, componentKit, Div, Grid, Motion, Row, Switch } from '@edsolater/uikit'
+import { WrappedBy } from '@edsolater/uikit/plugins'
+import { useState } from 'react'
+import { defaultTheme } from '../theme/defaultTheme'
+import { lightTheme } from '../theme/lightTheme'
+import { useTheme, useThemeSetter } from '../theme/ThemeProvider'
 
 export const TopNavBar = componentKit('TopNavBar', () => {
-  const { value: theme, set: setTheme } = useTheme();
-  const [flag] = useState(false);
+  const theme = useTheme()
+  const setTheme = useThemeSetter()
+  const [flag] = useState(false)
   return (
     <Row icss={{ backgroundColor: theme?.colors.navBarBg, justifyContent: 'end', gap: 16 }}>
       <Row>
@@ -21,5 +21,5 @@ export const TopNavBar = componentKit('TopNavBar', () => {
       <Button onClick={() => setTheme?.(lightTheme)}>Light Theme</Button>
       <Button onClick={() => setTheme?.(defaultTheme)}>Default Theme</Button>
     </Row>
-  );
-});
+  )
+})

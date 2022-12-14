@@ -13,6 +13,6 @@ export type AppTheme = {
   component: {}
 }
 
-export const [ThemeProvider, , { useTheme }] = createComponentContext({ theme: defaultTheme })
+export const [ThemeProvider, , { useTheme , useThemeSetter}] = createComponentContext({ theme: defaultTheme })
 
 export const createPredefinedTheme = (part: Partial<AppTheme>) => merge(defaultTheme, part)

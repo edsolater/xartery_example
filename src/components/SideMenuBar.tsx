@@ -1,10 +1,10 @@
-import { groupBy, mapEntry, pickProperty, map } from '@edsolater/fnkit'
+import { groupBy, pickProperty } from '@edsolater/fnkit'
 import { componentKit, Div, For, Icon, Row, Text } from '@edsolater/uikit'
 import { SideMenuEntryItem } from '../configs/sideMenu'
 import { useTheme } from '../theme/ThemeProvider'
 
 export const SideMenuBar = componentKit(
-  'EntriesBar',
+  'SideMenuBar',
   ({
     activeEntryItem,
     entryItems,
@@ -17,7 +17,7 @@ export const SideMenuBar = componentKit(
     const theme = useTheme()
     const tree = parseToTreeStructure(entryItems)
     return (
-      <Div>
+      <Div icss={{ background: theme.colors.sideBarBg }}>
         <For each={tree} getKey={pickProperty('groupName')}>
           {({ groupName, entries }) => (
             <Div>
@@ -31,7 +31,7 @@ export const SideMenuBar = componentKit(
                     }}
                   >
                     <Icon
-                      src={entry.iconPath}
+                      src={entry.entryIcon}
                       cssColor={activeEntryItem?.name === entry.name ? 'cornflowerblue' : 'dodgerblue'}
                     />
                     <Text>{entry.name}</Text>

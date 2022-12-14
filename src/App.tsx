@@ -17,7 +17,7 @@ export function App() {
           gridTemplateColumns: '300px 1fr',
           gridTemplate: `
             "nav  nav" 48px
-            "side con" 40px / 20% 1fr`
+            "side con" 1fr / 12em 1fr`
         }}
       >
         <TopNavBar icss={{ gridArea: 'nav' }} />

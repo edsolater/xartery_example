@@ -1,6 +1,6 @@
-import { AppTheme } from './ThemeProvider';
+import { AppTheme } from './ThemeProvider'
 
 export const defaultTheme: AppTheme = {
   colors: {},
   component: {}
-};
+}

@@ -1,5 +1,16 @@
 import { groupBy, pickProperty } from '@edsolater/fnkit'
-import { componentKit, Div, For, Icon, Row, Text } from '@edsolater/uikit'
+import {
+  Accordion,
+  AccordionButton,
+  AccordionPanel,
+  canUnhandleOpen,
+  componentKit,
+  Div,
+  For,
+  Icon,
+  Row,
+  Text
+} from '@edsolater/uikit'
 import { SideMenuEntryItem } from '../configs/sideMenu'
 import { useTheme } from '../theme/ThemeProvider'
 
@@ -20,25 +31,29 @@ export const SideMenuBar = componentKit(
       <Div icss={{ background: theme.colors.sideBarBg }}>
         <For each={tree} getKey={pickProperty('groupName')}>
           {({ groupName, entries }) => (
-            <Div>
-              <Div>{groupName}</Div>
-              {/*TODO: `<dialog>` */}
-              <For each={entries} getKey={pickProperty('name')}>
-                {(entry) => (
-                  <Row
-                    onClick={() => {
-                      onChangeItem?.(entry)
-                    }}
-                  >
-                    <Icon
-                      src={entry.entryIcon}
-                      cssColor={activeEntryItem?.name === entry.name ? 'cornflowerblue' : 'dodgerblue'}
-                    />
-                    <Text>{entry.name}</Text>
-                  </Row>
-                )}
-              </For>
-            </Div>
+            <Accordion componentPropsPlugin={canUnhandleOpen({ defaultOpen: true })}>
+              <AccordionButton>
+                <Div>{groupName}</Div>
+              </AccordionButton>
+              <AccordionPanel>
+                {/*TODO: `<dialog>` */}
+                <For each={entries} getKey={pickProperty('name')}>
+                  {(entry) => (
+                    <Row
+                      onClick={() => {
+                        onChangeItem?.(entry)
+                      }}
+                    >
+                      <Icon
+                        src={entry.entryIcon}
+                        cssColor={activeEntryItem?.name === entry.name ? 'cornflowerblue' : 'dodgerblue'}
+                      />
+                      <Text>{entry.name}</Text>
+                    </Row>
+                  )}
+                </For>
+              </AccordionPanel>
+            </Accordion>
           )}
         </For>
       </Div>

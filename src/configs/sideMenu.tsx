@@ -31,7 +31,7 @@ export const sideMenu = {
     {
       group: 'Examples',
       name: 'ExampleMaker',
-      entryIcon: '/todo_list.svg',
+      entryIcon: '/example.svg',
       component: () => <ExampleMaker />
     }
   ]

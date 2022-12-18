@@ -28,7 +28,7 @@ export const TodoList = componentKit(
               padding: 16,
               marginInline: 'auto'
             }}
-            plugins={keyboardShortcut({
+            plugin={keyboardShortcut({
               'ctrl + z': onUndo,
               'ctrl + shift + z': onRedo
             })}

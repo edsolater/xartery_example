@@ -31,7 +31,7 @@ export const SideMenuBar = componentKit(
       <Div icss={{ background: theme.colors.sideBarBg }}>
         <For each={tree} getKey={pickProperty('groupName')}>
           {({ groupName, entries }) => (
-            <Accordion componentPlugin={makeUnhandleComponent({ defaultOpen: true })}>
+            <Accordion plugin={makeUnhandleComponent({ defaultOpen: true })}>
               <AccordionButton>
                 <Div>{groupName}</Div>
               </AccordionButton>

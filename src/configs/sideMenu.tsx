@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { BilibidiHome } from '../components/Bilibidi/home'
 import { EditPlayground } from '../components/EditPlayround'
 import { MotionGrid } from '../components/MotionGrid'
 import { MatureTodoList } from '../components/TodoList/example/MatureTodoList'
@@ -33,6 +34,12 @@ export const sideMenu = {
       name: 'EditPlayground',
       entryIcon: '/example.svg',
       component: () => <EditPlayground />
+    },
+    {
+      group: 'Examples',
+      name: 'Bilibidi',
+      entryIcon: '/bilibili.svg',
+      component: () => <BilibidiHome />
     }
   ]
 } as SideMenuEntries

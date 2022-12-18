@@ -30,7 +30,7 @@ export const sideMenu = {
     },
     {
       group: 'Examples',
-      name: 'ExampleMaker',
+      name: 'EditPlayground',
       entryIcon: '/example.svg',
       component: () => <EditPlayground />
     }

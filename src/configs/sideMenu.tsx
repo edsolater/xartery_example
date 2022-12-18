@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { ExampleMaker } from '../components/ExampleMaker'
+import { EditPlayground } from '../components/EditPlayround'
 import { MotionGrid } from '../components/MotionGrid'
 import { MatureTodoList } from '../components/TodoList/example/MatureTodoList'
 
@@ -32,7 +32,7 @@ export const sideMenu = {
       group: 'Examples',
       name: 'ExampleMaker',
       entryIcon: '/example.svg',
-      component: () => <ExampleMaker />
+      component: () => <EditPlayground />
     }
   ]
 } as SideMenuEntries

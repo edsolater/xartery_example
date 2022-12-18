@@ -3,11 +3,11 @@ import {
   Accordion,
   AccordionButton,
   AccordionPanel,
-  canUnhandleOpen,
   componentKit,
   Div,
   For,
   Icon,
+  makeUnhandleComponent,
   Row,
   Text
 } from '@edsolater/uikit'
@@ -31,7 +31,7 @@ export const SideMenuBar = componentKit(
       <Div icss={{ background: theme.colors.sideBarBg }}>
         <For each={tree} getKey={pickProperty('groupName')}>
           {({ groupName, entries }) => (
-            <Accordion componentPropsPlugin={canUnhandleOpen({ defaultOpen: true })}>
+            <Accordion componentPlugin={makeUnhandleComponent({ defaultOpen: true })}>
               <AccordionButton>
                 <Div>{groupName}</Div>
               </AccordionButton>

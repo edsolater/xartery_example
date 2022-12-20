@@ -17,7 +17,7 @@ export const MotionGrid = componentKit('MotionGrid', () => {
         <For each={items} getKey={loopSelf}>
           {(item) => (
             <Div
-              plugins={WrappedBy(Motion)}
+              plugin={WrappedBy(Motion)}
               icss={{ width: 100 + items.length * 10, height: 100 + items.length * 10, background: 'dodgerblue' }}
             >
               {item}

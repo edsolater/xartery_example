@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { BilibidiHome } from '../components/Bilibidi/home'
+import { BilibiHome } from '../components/Bilibidi/home'
 import { EditPlayground } from '../components/EditPlayround'
 import { MotionGrid } from '../components/MotionGrid'
 import { MatureTodoList } from '../components/TodoList/example/MatureTodoList'
@@ -9,6 +9,7 @@ export type SideMenuEntryItem = {
   name: string
   entryIcon: string
   component: () => ReactNode
+  defaultActive?: boolean
 }
 
 export type SideMenuEntries = {
@@ -37,9 +38,10 @@ export const sideMenu = {
     },
     {
       group: 'Examples',
-      name: 'Bilibidi',
+      name: 'Bilibi',
       entryIcon: '/bilibili.svg',
-      component: () => <BilibidiHome />
+      component: () => <BilibiHome />,
+      defaultActive: true
     }
   ]
 } as SideMenuEntries

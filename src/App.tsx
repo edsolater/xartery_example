@@ -8,7 +8,9 @@ import { lightTheme } from './theme/lightTheme'
 import { ThemeProvider } from './theme/ThemeProvider'
 
 export function App() {
-  const [activeEntryItem, setActiveEntryItem] = useState<SideMenuEntryItem>(sideMenu.entries[0])
+  const [activeEntryItem, setActiveEntryItem] = useState<SideMenuEntryItem>(
+    sideMenu.entries.find((entry) => entry.defaultActive) ?? sideMenu.entries[0]
+  )
   return (
     <ThemeProvider theme={lightTheme}>
       <AppRoot
